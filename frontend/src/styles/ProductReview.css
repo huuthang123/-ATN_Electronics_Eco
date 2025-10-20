@@ -1,0 +1,102 @@
+.product-review-container {
+  margin: 20px 0;
+  padding: 15px;
+  background: #ffffff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.product-review-container h3 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.reviews-section {
+  margin-bottom: 15px;
+}
+
+.toggle-btn {
+  padding: 8px 16px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  display: inline-flex; /* Thay vì width: 100%, dùng inline-flex để nút chỉ rộng vừa đủ */
+  align-items: center;
+  gap: 8px; /* Khoảng cách giữa text và icon */
+  transition: background 0.3s, transform 0.1s;
+}
+
+.toggle-btn:hover {
+  background: #2980b9;
+  transform: scale(1.02); /* Hiệu ứng phóng to nhẹ khi hover */
+}
+
+.toggle-btn::after {
+  content: '▼'; /* Biểu tượng mũi tên xuống */
+  display: inline-block;
+  font-size: 12px;
+  transition: transform 0.3s;
+}
+
+.toggle-btn.expanded::after {
+  content: '▲'; /* Biểu tượng mũi tên lên khi mở rộng */
+  transform: rotate(180deg);
+}
+
+.review-list {
+  margin-top: 10px;
+}
+
+.review-item {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  background: #f9f9f9;
+  border-radius: 5px;
+  margin-bottom: 5px;
+}
+
+.review-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #34495e;
+}
+
+.reviewer-name {
+  font-weight: bold;
+}
+
+.review-rating {
+  margin: 5px 0;
+}
+
+.star-filled {
+  color: #ffd700;
+  font-size: 16px;
+}
+
+.star-empty {
+  color: #ccc;
+  font-size: 16px;
+}
+
+.review-comment {
+  color: #7f8c8d;
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+.average-rating {
+  padding: 10px;
+  background: #e6f0fa;
+  border-radius: 5px;
+  font-size: 14px;
+}
+
+.average-rating strong {
+  color: #2c3e50;
+}
