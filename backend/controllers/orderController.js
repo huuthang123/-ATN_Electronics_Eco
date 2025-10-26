@@ -3,21 +3,13 @@ const Order = db.Order;
 const OrderItem = db.OrderItem;
 const Product = db.Product;
 const User = db.User;
-const { QueryTypes } = require('sequelize');
 
 class OrderController {
   // [GET] /api/orders/me
   static async getUserOrders(req, res) {
     try {
-      const userId = req.user.id;
-      const orders = await Order.findAll({
-        where: { userId },
-        include: [
-          { model: User, attributes: ['username', 'email'] },
-          { model: OrderItem, include: [{ model: Product, attributes: ['name', 'image'] }] },
-        ],
-        order: [['createdAt', 'DESC']],
-      });
+      const userId = req.user.userId;
+      const orders = await Order.getByUser(userId);
       if (!orders.length)
         return res.status(404).json({ message: 'Không tìm thấy đơn hàng nào' });
       res.json(orders);
@@ -29,13 +21,7 @@ class OrderController {
   // [GET] /api/orders
   static async getOrders(req, res) {
     try {
-      const orders = await Order.findAll({
-        include: [
-          { model: User, attributes: ['username', 'email'] },
-          { model: OrderItem, include: [{ model: Product, attributes: ['name', 'image'] }] },
-        ],
-        order: [['createdAt', 'DESC']],
-      });
+      const orders = await Order.getAll();
       res.json(orders);
     } catch (error) {
       res.status(500).json({ message: 'Lỗi server', error: error.message });
@@ -44,66 +30,48 @@ class OrderController {
 
   // [POST] /api/orders
   static async createOrder(req, res) {
-    const t = await db.sequelize.transaction();
     try {
-      const userId = req.user.id;
-      const { items, total, transactionId, address } = req.body;
+      const userId = req.user.userId;
+      const { items, totalPrice, transactionId, address } = req.body;
 
       if (!Array.isArray(items) || !items.length)
         return res.status(400).json({ message: 'Danh sách sản phẩm không hợp lệ' });
-      if (!total || isNaN(total) || total <= 0)
+      if (!totalPrice || isNaN(totalPrice) || totalPrice <= 0)
         return res.status(400).json({ message: 'Tổng tiền không hợp lệ' });
       if (!address || !address.fullName || !address.phone || !address.address)
         return res.status(400).json({ message: 'Địa chỉ giao hàng không đầy đủ' });
 
-      const order = await Order.create(
-        { userId, totalPrice: total, transactionId, address, status: 'Pending' },
-        { transaction: t }
-      );
+      const orderId = await Order.create({
+        userId,
+        totalPrice,
+        transactionId,
+        address: JSON.stringify(address),
+        items,
+        status: 'Pending'
+      });
 
-      for (const item of items) {
-        if (!item.productId || !item.quantity || !item.price)
-          throw new Error('Dữ liệu sản phẩm không hợp lệ');
-
-        await OrderItem.create(
-          {
-            orderId: order.id,
-            productId: item.productId,
-            quantity: item.quantity,
-            price: item.price,
-            size: item.size || 'Default',
-            color: item.color || 'Không xác định',
-          },
-          { transaction: t }
-        );
-      }
-
-      await t.commit();
-      res.status(201).json({ message: 'Tạo đơn hàng thành công', orderId: order.id });
+      res.status(201).json({ message: 'Tạo đơn hàng thành công', orderId });
     } catch (error) {
-      await t.rollback();
       res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
   }
 
   // [DELETE] /api/orders/:id
   static async deleteOrder(req, res) {
-    const t = await db.sequelize.transaction();
     try {
       const { id } = req.params;
-      const userId = req.user.id;
+      const userId = req.user.userId;
 
-      const order = await Order.findOne({ where: { id, userId }, transaction: t });
+      const order = await Order.getById(id);
       if (!order)
-        return res.status(404).json({ message: 'Đơn hàng không tồn tại hoặc không thuộc về bạn' });
+        return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
+      
+      if (order.userId !== userId)
+        return res.status(403).json({ message: 'Bạn không có quyền xóa đơn hàng này' });
 
-      await OrderItem.destroy({ where: { orderId: id }, transaction: t });
-      await order.destroy({ transaction: t });
-
-      await t.commit();
+      await Order.deleteById(id);
       res.json({ message: 'Đơn hàng đã bị xóa' });
     } catch (error) {
-      await t.rollback();
       res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
   }
@@ -114,16 +82,16 @@ class OrderController {
       const { id } = req.params;
       const { status } = req.body;
 
-      const order = await Order.findByPk(id);
+      const order = await Order.getById(id);
       if (!order)
         return res.status(404).json({ message: 'Đơn hàng không tồn tại' });
 
-      if (order.userId !== req.user.id && req.user.role !== 'admin')
+      if (order.userId !== req.user.userId && req.user.role !== 'admin')
         return res.status(403).json({ message: 'Bạn không có quyền cập nhật đơn hàng này' });
 
-      order.status = status;
-      await order.save();
-      res.json({ message: 'Cập nhật trạng thái thành công', order });
+      await Order.updateStatus(id, status);
+      const updatedOrder = await Order.getById(id);
+      res.json({ message: 'Cập nhật trạng thái thành công', order: updatedOrder });
     } catch (error) {
       res.status(500).json({ message: 'Lỗi server', error: error.message });
     }
@@ -133,28 +101,21 @@ class OrderController {
   static async getOrderByTransaction(req, res) {
     try {
       const transactionId = req.params.transactionNo;
-      const order = await Order.findOne({
-        where: { transactionId },
-        include: [
-          { model: User, attributes: ['username', 'email'] },
-          { model: OrderItem, include: [{ model: Product, attributes: ['name', 'image'] }] },
-        ],
-      });
+      const order = await Order.getByTransactionId(transactionId);
       if (!order)
         return res.status(404).json({ message: 'Không tìm thấy đơn hàng với mã giao dịch này' });
 
+      const items = await OrderItem.getItems(order.orderId);
       const formatted = {
-        items: order.OrderItems.map(oi => ({
+        items: items.map(oi => ({
           productId: oi.productId,
-          name: oi.Product?.name,
-          image: oi.Product?.image,
           quantity: oi.quantity,
           price: oi.price,
           size: oi.size,
           color: oi.color,
         })),
         total: order.totalPrice,
-        address: order.address,
+        address: JSON.parse(order.address || '{}'),
         transactionId: order.transactionId,
       };
       res.json(formatted);
@@ -169,22 +130,22 @@ class OrderController {
       const { startDate, endDate, groupBy } = req.query;
       const start = startDate || '2025-01-01';
       const end = endDate || new Date().toISOString().slice(0, 10);
+      const formatStr = groupBy === 'day' ? "'yyyy-MM-dd'" : "'yyyy-MM'";
+      
       const sql = `
         SELECT 
-          FORMAT(createdAt, ${groupBy === 'day' ? "'yyyy-MM-dd'" : "'yyyy-MM'"}) AS date,
+          FORMAT(createdAt, ${formatStr}) AS date,
           SUM(totalPrice) AS totalRevenue,
           COUNT(*) AS orderCount
         FROM Orders
         WHERE status = 'Delivered'
-          AND createdAt BETWEEN :start AND DATEADD(day, 1, :end)
-        GROUP BY FORMAT(createdAt, ${groupBy === 'day' ? "'yyyy-MM-dd'" : "'yyyy-MM'"})
+          AND createdAt BETWEEN '${start}' AND DATEADD(day, 1, '${end}')
+        GROUP BY FORMAT(createdAt, ${formatStr})
         ORDER BY date ASC
       `;
-      const data = await db.sequelize.query(sql, {
-        replacements: { start, end },
-        type: QueryTypes.SELECT,
-      });
-      res.json({ revenue: data });
+      
+      const result = await db.sql.query(sql);
+      res.json({ revenue: result.recordset });
     } catch (error) {
       res.status(500).json({ message: 'Lỗi server', error: error.message });
     }

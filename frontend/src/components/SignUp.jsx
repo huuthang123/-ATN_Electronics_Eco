@@ -12,6 +12,7 @@ function SignUp() {
   });
 
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { register } = useAuth();
 
@@ -23,20 +24,23 @@ function SignUp() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
+    setLoading(true);
     try {
       // Gọi register với 4 tham số: username, email, phone, password
       await register(formData.username, formData.email, formData.phone, formData.password);
       setMessage('Đăng ký thành công! Đang chuyển hướng...');
       setFormData({ username: '', email: '', phone: '', password: '' });
-      setTimeout(() => navigate('/'), 2000);
+      // Không cần setTimeout và navigate vì AuthContext đã xử lý
     } catch (error) {
       setMessage(error.message || 'Đăng ký thất bại');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="sign-up">
-      <h1 className="sign-up-heading">Đăng kí</h1>
+      <h1 className="sign-up-heading">⚡ Đăng ký TechStore</h1>
       {message && (
         <p style={{ color: message.includes('thành công') ? 'green' : 'red', textAlign: 'center' }}>
           {message}
@@ -89,7 +93,9 @@ function SignUp() {
           minLength="6" // Đảm bảo tối thiểu 6 ký tự
           required
         />
-        <button type="submit" className="sign-up-submit">Đăng kí</button>
+        <button type="submit" className="sign-up-submit" disabled={loading}>
+          {loading ? "Đang đăng ký..." : "Đăng kí"}
+        </button>
       </form>
       <p className="sign-up-already">
         <span>Bạn đã có tài khoản?</span>

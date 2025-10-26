@@ -17,13 +17,13 @@ const ProductReview = ({ productId }) => {
       try {
         // 1. Get summary
         const { data: summaryData } = await axios.get(
-          `http://localhost:5000/api/summaries/${productId}`
+          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/summaries/${productId}`
         );
         setSummary(summaryData.summary || '');
 
         // 2. Get reviews
         const { data: reviewsData } = await axios.get(
-          `http://localhost:5000/api/reviews/product/${productId}`
+          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/reviews/product/${productId}`
         );
         setReviews(reviewsData);
 
@@ -33,7 +33,7 @@ const ProductReview = ({ productId }) => {
             const rawUserId = review.userId?._id || review.userId;
             try {
               const { data } = await axios.get(
-                `http://localhost:5000/api/users/username/${rawUserId}`
+                `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/users/username/${rawUserId}`
               );
               return {
                 userId: rawUserId,
@@ -51,7 +51,7 @@ const ProductReview = ({ productId }) => {
 
         // 4. Get average rating
         const { data: avgData } = await axios.get(
-          `http://localhost:5000/api/reviews/average/${productId}`
+          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/reviews/average/${productId}`
         );
         setAverageRating(avgData.averageRating || 0);
         setTotalReviews(avgData.totalReviews || 0);

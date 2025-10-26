@@ -3,13 +3,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Allura&display=swap');
 
-/* CSS tổng thể */
+/* CSS tổng thể - Theme bán đồ điện tử */
 :root {
-    --main-color: #182138;
-    --sub-color: #202960;
-    --text-color: #fff;
-    --backgound-color: #f6de9f;
-    --sub-text: "Playfair Display", serif;
+    --primary-red: #dc2626;
+    --dark-red: #b91c1c;
+    --light-red: #fef2f2;
+    --white: #ffffff;
+    --black: #000000;
+    --dark-gray: #1f2937;
+    --light-gray: #f9fafb;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --accent-red: #ef4444;
+    --border-color: #e5e7eb;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
 
 html, body {
@@ -33,6 +41,10 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--white);
+    color: var(--text-primary);
+    line-height: 1.6;
 }
 
 /* Tổng thể */
@@ -44,7 +56,7 @@ body {
 }
 
 .main-content {
-    background-image: url("../images/backgroundsaykho.png");
+    background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
     width: 100%;
     min-height: auto;
     display: block;

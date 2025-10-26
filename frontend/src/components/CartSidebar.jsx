@@ -4,6 +4,7 @@ import '../styles/cartsidebar.css';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import CartItemInfo from './CartItemInfo';
 
 function CartSidebar() {
   const {
@@ -46,7 +47,7 @@ function CartSidebar() {
   const handleViewCart = () => navigate('/cart');
 
   const handleViewProduct = (productId, categoryName) => {
-    const path = categoryName ? `/${categoryName}/${productId}` : `/product/${productId}`;
+    const path = categoryName ? `/product/${encodeURIComponent(categoryName)}/${productId}` : `/product/unknown/${productId}`;
     navigate(path);
   };
 
@@ -61,7 +62,7 @@ function CartSidebar() {
 
       <div id="cart-sidebar" className={isOpen ? 'open' : 'closed'}>
         <div className="cart-header">
-          <h2>Giỏ hàng 🛒</h2>
+          <h2>⚡ Giỏ hàng TechStore</h2>
           <button className="close-btn" onClick={toggleCart}>
             <i className="fas fa-times"></i>
           </button>
@@ -72,17 +73,37 @@ function CartSidebar() {
         </div>
 
         <ul id="cart-items">
-          {cartItems.map((item) => (
+          {cartItems.map((item) => {
+            console.log('🔍 CartSidebar item:', item);
+            console.log('🔍 Item name:', item.name);
+            console.log('🔍 Item attributes:', item.attributes);
+            return (
             <li key={`${item.productId}-${JSON.stringify(item.attributes)}`} className="cart-item">
               <div
                 className="cart-item-details"
                 onClick={() => handleViewProduct(item.productId, item.categoryName)}
                 style={{ cursor: 'pointer' }}
               >
-                <img src={item.image} alt={item.name} className="cart-item-image" />
+                <img 
+                  src={item.image} 
+                  alt={item.name} 
+                  className="cart-item-image"
+                  onError={(e) => {
+                    e.target.src = '/placeholder.png';
+                    e.target.onerror = null;
+                  }}
+                />
                 <div className="cart-item-info">
                   <span>
-                    {item.name} ({displayAttributes(item.attributes || { size: 'S' })})
+                    <CartItemInfo 
+                      productId={item.productId} 
+                      fallbackName={item.name || 'Tên sản phẩm'} 
+                    />
+                    {item.attributes && Object.keys(item.attributes).length > 0 && (
+                      <span className="attributes">
+                        ({displayAttributes(item.attributes)})
+                      </span>
+                    )}
                   </span>
                   <span>
                     {typeof item.price === 'number' ? `${item.price.toLocaleString()} VND` : "Chưa có giá"}
@@ -119,7 +140,8 @@ function CartSidebar() {
                 Xóa
               </button>
             </li>
-          ))}
+            );
+          })}
         </ul>
 
         <div className="cart-footer">

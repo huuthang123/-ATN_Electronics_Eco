@@ -3,6 +3,7 @@ const CategoryController = require('../controllers/CategoryController');
 const { protect, restrictTo } = require('../middleware/authMiddleware');
 const router = express.Router();
 
+router.get('/list', CategoryController.getCategories);
 router.get('/', CategoryController.getCategories);
 router.get('/:id', CategoryController.getCategoryById);
 router.post('/', protect, restrictTo('admin'), CategoryController.addCategory);

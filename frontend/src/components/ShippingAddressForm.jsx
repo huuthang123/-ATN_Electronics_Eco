@@ -21,6 +21,8 @@ function ShippingAddressForm({ onAddressSelect, onAddressAdded, onClose, initial
   const [loading, setLoading] = useState({ provinces: false, districts: false, wards: false, form: false });
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [editingAddress, setEditingAddress] = useState(null);
 
   useEffect(() => {
     const fetchAddresses = async () => {
@@ -150,7 +152,7 @@ function ShippingAddressForm({ onAddressSelect, onAddressAdded, onClose, initial
     const updatedFormData = { ...formData, [field]: value };
     setFormData(updatedFormData);
     const newErrors = validateForm(updatedFormData);
-    setErrors((prev) => ({ ...prev, ...newErrors, form: '' })); // Reset errors.form khi thay đổi
+    setErrors((prev) => ({ ...prev, ...newErrors, form: '' }));
   };
 
   const handleSelectAddress = (address) => {
@@ -164,13 +166,33 @@ function ShippingAddressForm({ onAddressSelect, onAddressAdded, onClose, initial
     onClose();
   };
 
+  const handleDeleteAddress = async (addressId) => {
+    try {
+      setLoading((prev) => ({ ...prev, form: true }));
+      await AddressService.deleteAddress(addressId, user.token);
+      const updatedAddresses = await AddressService.getAddresses(user.token);
+      setSavedAddresses(updatedAddresses);
+      setShowDeleteConfirm(null);
+      
+      // Nếu địa chỉ bị xóa là địa chỉ đang chọn, chọn địa chỉ đầu tiên
+      if (selectedAddressId === addressId && updatedAddresses.length > 0) {
+        handleSelectAddress(updatedAddresses[0]);
+      } else if (updatedAddresses.length === 0) {
+        setSelectedAddressId(null);
+      }
+    } catch (error) {
+      console.error('Lỗi khi xóa địa chỉ:', error);
+      setErrors({ form: error.message || 'Lỗi khi xóa địa chỉ.' });
+    } finally {
+      setLoading((prev) => ({ ...prev, form: false }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Submit button clicked');
 
     const validationErrors = validateForm(formData);
     if (Object.keys(validationErrors).length > 0) {
-      console.log('Validation failed:', validationErrors);
       setErrors(validationErrors);
       return;
     }
@@ -192,27 +214,28 @@ function ShippingAddressForm({ onAddressSelect, onAddressAdded, onClose, initial
       ward: wardName,
       detail: formData.detail,
     };
-    console.log('Sending address data:', addressData);
+
+    console.log('Address data being sent:', addressData);
+    console.log('Phone number:', formData.phone, 'Type:', typeof formData.phone);
 
     try {
       setLoading((prev) => ({ ...prev, form: true }));
       let newAddress;
-      if (initialData && initialData._id) {
-        newAddress = await AddressService.updateAddress(initialData._id, addressData, user.token);
-        console.log('Address updated:', newAddress);
+      const addressToUpdate = editingAddress || initialData;
+      if (addressToUpdate && addressToUpdate._id) {
+        newAddress = await AddressService.updateAddress(addressToUpdate._id, addressData, user.token);
         onAddressSelect(newAddress);
       } else {
         newAddress = await AddressService.addAddress(addressData, user.token);
-        console.log('New address added:', newAddress);
         if (onAddressAdded) onAddressAdded(newAddress);
       }
       const updatedAddresses = await AddressService.getAddresses(user.token);
-      console.log('Updated address list:', updatedAddresses);
       setSavedAddresses(updatedAddresses);
       setFormData({ province: '', district: '', ward: '', detail: '', fullName: '', phone: '' });
       setDistricts([]);
       setWards([]);
       setErrors({});
+      setEditingAddress(null);
       onClose();
     } catch (error) {
       console.error('Error saving address:', error);
@@ -228,133 +251,221 @@ function ShippingAddressForm({ onAddressSelect, onAddressAdded, onClose, initial
 
   if (!user?.token) {
     return (
-      <div className="shipping-address-container">
-        <p className="form-error">Vui lòng đăng nhập để quản lý địa chỉ.</p>
+      <div className="shipping-address-modal" onClick={onClose}>
+        <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-header">
+            <h3>Địa chỉ giao hàng</h3>
+            <button className="close-btn" onClick={onClose}>×</button>
+          </div>
+          <div className="modal-body">
+            <p className="form-error">Vui lòng đăng nhập để quản lý địa chỉ.</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="shipping-address-container">
-      {(loading.provinces || loading.districts || loading.wards || loading.form) && <p>Đang tải...</p>}
-      <h3>Chọn địa chỉ giao hàng</h3>
-      {savedAddresses.length > 0 && !isAddingNew && (
-        <div className="saved-addresses">
-          {savedAddresses.map((address) => (
-            <div
-              key={address._id}
-              className={`address-item ${selectedAddressId === address._id ? 'selected' : ''}`}
-              onClick={() => handleSelectAddress(address)}
-            >
-              <p>
-                <strong>{address.fullName}</strong> ({address.phone})
-              </p>
-              <p>{`${address.detail}, ${address.ward}, ${address.district}, ${address.province}`}</p>
+    <div className="shipping-address-modal" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-header">
+          <h3>Quản lý địa chỉ giao hàng</h3>
+          <button className="close-btn" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          <div className={`loading-overlay ${(loading.provinces || loading.districts || loading.wards || loading.form) ? 'loading' : ''}`}>
+            <p>Đang tải...</p>
+          </div>
+          
+          {savedAddresses.length > 0 && !isAddingNew && (
+            <div className="saved-addresses-section">
+              <h4>Địa chỉ đã lưu</h4>
+              <div className="saved-addresses">
+                {savedAddresses.map((address) => (
+                  <div
+                    key={address._id}
+                    className={`address-item ${selectedAddressId === address._id ? 'selected' : ''}`}
+                  >
+                    <div className="address-content" onClick={() => handleSelectAddress(address)}>
+                      <p>
+                        <strong>{address.fullName}</strong> ({address.phone})
+                      </p>
+                      <p>{`${address.detail}, ${address.ward}, ${address.district}, ${address.province}`}</p>
+                    </div>
+                    <div className="address-actions">
+                      <button
+                        className="edit-btn"
+                        onClick={() => {
+                          setEditingAddress(address);
+                          setFormData({
+                            province: address.province,
+                            district: address.district,
+                            ward: address.ward,
+                            detail: address.detail,
+                            fullName: address.fullName,
+                            phone: address.phone,
+                          });
+                        }}
+                        disabled={loading.form}
+                      >
+                        ✏️
+                      </button>
+                      <button
+                        className="delete-btn"
+                        onClick={() => setShowDeleteConfirm(address._id)}
+                        disabled={loading.form}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
+          )}
+
+          <div className="form-section">
+            <h4>{editingAddress || initialData ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ mới'}</h4>
+            <form onSubmit={handleSubmit} className="address-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Họ và tên:</label>
+                  <input
+                    type="text"
+                    value={formData.fullName}
+                    onChange={(e) => handleInputChange('fullName', e.target.value)}
+                    className={errors.fullName ? 'input-error' : ''}
+                    disabled={loading.form}
+                  />
+                  {errors.fullName && <p className="error-message">{errors.fullName}</p>}
+                </div>
+                <div className="form-group">
+                  <label>Số điện thoại:</label>
+                  <input
+                    type="text"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className={errors.phone ? 'input-error' : ''}
+                    disabled={loading.form}
+                  />
+                  {errors.phone && <p className="error-message">{errors.phone}</p>}
+                </div>
+              </div>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Tỉnh/Thành phố:</label>
+                  <select
+                    value={formData.province}
+                    onChange={(e) => handleInputChange('province', e.target.value)}
+                    className={errors.province ? 'input-error' : ''}
+                    disabled={loading.provinces || loading.form}
+                  >
+                    <option value="">Chọn Tỉnh/Thành phố</option>
+                    {provinces.map((province) => (
+                      <option key={province.code} value={province.code}>
+                        {province.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.province && <p className="error-message">{errors.province}</p>}
+                </div>
+                <div className="form-group">
+                  <label>Quận/Huyện:</label>
+                  <select
+                    value={formData.district}
+                    onChange={(e) => handleInputChange('district', e.target.value)}
+                    className={errors.district ? 'input-error' : ''}
+                    disabled={!formData.province || loading.districts || loading.form}
+                  >
+                    <option value="">Chọn Quận/Huyện</option>
+                    {districts.map((district) => (
+                      <option key={district.code} value={district.code}>
+                        {district.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.district && <p className="error-message">{errors.district}</p>}
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Phường/Xã:</label>
+                  <select
+                    value={formData.ward}
+                    onChange={(e) => handleInputChange('ward', e.target.value)}
+                    className={errors.ward ? 'input-error' : ''}
+                    disabled={!formData.district || loading.wards || loading.form}
+                  >
+                    <option value="">Chọn Phường/Xã</option>
+                    {wards.map((ward) => (
+                      <option key={ward.code} value={ward.code}>
+                        {ward.name}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.ward && <p className="error-message">{errors.ward}</p>}
+                </div>
+                <div className="form-group">
+                  <label>Địa chỉ chi tiết:</label>
+                  <input
+                    type="text"
+                    value={formData.detail}
+                    onChange={(e) => handleInputChange('detail', e.target.value)}
+                    className={errors.detail ? 'input-error' : ''}
+                    disabled={loading.form}
+                    placeholder="Số nhà, tên đường..."
+                  />
+                  {errors.detail && <p className="error-message">{errors.detail}</p>}
+                </div>
+              </div>
+
+              {errors.form && <p className="form-error">{errors.form}</p>}
+              
+              <div className="form-buttons">
+                <button type="submit" className="submit-btn" disabled={loading.form}>
+                  {loading.form ? 'Đang lưu...' : (editingAddress || initialData) ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ'}
+                </button>
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  disabled={loading.form}
+                  onClick={onClose}
+                >
+                  Hủy
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Confirm Delete Modal */}
+          {showDeleteConfirm && (
+            <div className="confirm-modal">
+              <div className="confirm-content">
+                <h4>Xác nhận xóa</h4>
+                <p>Bạn có chắc chắn muốn xóa địa chỉ này?</p>
+                <div className="confirm-buttons">
+                  <button
+                    className="confirm-delete-btn"
+                    onClick={() => handleDeleteAddress(showDeleteConfirm)}
+                    disabled={loading.form}
+                  >
+                    Xóa
+                  </button>
+                  <button
+                    className="cancel-delete-btn"
+                    onClick={() => setShowDeleteConfirm(null)}
+                    disabled={loading.form}
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      )}
-      <h3>{initialData ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ mới'}</h3>
-      <form onSubmit={handleSubmit} className="address-form">
-        <div className="form-group">
-          <label>Họ và tên:</label>
-          <input
-            type="text"
-            value={formData.fullName}
-            onChange={(e) => handleInputChange('fullName', e.target.value)}
-            className={errors.fullName ? 'input-error' : ''}
-            disabled={loading.form}
-          />
-          {errors.fullName && <p className="error-message">{errors.fullName}</p>}
-        </div>
-        <div className="form-group">
-          <label>Số điện thoại:</label>
-          <input
-            type="text"
-            value={formData.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
-            className={errors.phone ? 'input-error' : ''}
-            disabled={loading.form}
-          />
-          {errors.phone && <p className="error-message">{errors.phone}</p>}
-        </div>
-        <div className="form-group">
-          <label>Tỉnh/Thành phố:</label>
-          <select
-            value={formData.province}
-            onChange={(e) => handleInputChange('province', e.target.value)}
-            className={errors.province ? 'input-error' : ''}
-            disabled={loading.provinces || loading.form}
-          >
-            <option value="">Chọn Tỉnh/Thành phố</option>
-            {provinces.map((province) => (
-              <option key={province.code} value={province.code}>
-                {province.name}
-              </option>
-            ))}
-          </select>
-          {errors.province && <p className="error-message">{errors.province}</p>}
-        </div>
-        <div className="form-group">
-          <label>Quận/Huyện:</label>
-          <select
-            value={formData.district}
-            onChange={(e) => handleInputChange('district', e.target.value)}
-            className={errors.district ? 'input-error' : ''}
-            disabled={!formData.province || loading.districts || loading.form}
-          >
-            <option value="">Chọn Quận/Huyện</option>
-            {districts.map((district) => (
-              <option key={district.code} value={district.code}>
-                {district.name}
-              </option>
-            ))}
-          </select>
-          {errors.district && <p className="error-message">{errors.district}</p>}
-        </div>
-        <div className="form-group">
-          <label>Phường/Xã:</label>
-          <select
-            value={formData.ward}
-            onChange={(e) => handleInputChange('ward', e.target.value)}
-            className={errors.ward ? 'input-error' : ''}
-            disabled={!formData.district || loading.wards || loading.form}
-          >
-            <option value="">Chọn Phường/Xã</option>
-            {wards.map((ward) => (
-              <option key={ward.code} value={ward.code}>
-                {ward.name}
-              </option>
-            ))}
-          </select>
-          {errors.ward && <p className="error-message">{errors.ward}</p>}
-        </div>
-        <div className="form-group">
-          <label>Địa chỉ chi tiết:</label>
-          <input
-            type="text"
-            value={formData.detail}
-            onChange={(e) => handleInputChange('detail', e.target.value)}
-            className={errors.detail ? 'input-error' : ''}
-            disabled={loading.form}
-          />
-          {errors.detail && <p className="error-message">{errors.detail}</p>}
-        </div>
-        {errors.form && <p className="form-error">{errors.form}</p>}
-        <div className="form-buttons">
-          <button type="submit" className="submit-btn" disabled={loading.form}>
-            {loading.form ? 'Đang lưu...' : initialData ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ'}
-          </button>
-          <button
-            type="button"
-            className="cancel-btn"
-            disabled={loading.form}
-            onClick={onClose}
-          >
-            Hủy
-          </button>
-        </div>
-      </form>
+      </div>
     </div>
   );
 }

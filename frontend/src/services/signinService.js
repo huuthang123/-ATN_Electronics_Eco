@@ -1,7 +1,9 @@
 // src/services/signInService.js
 import axios from "axios";
 
-const API_URL = "http://localhost:5000/api/auth/login"; // Sửa endpoint
+import { apiConfig } from '../config/api';
+
+const API_URL = `${apiConfig.baseURL}/api/auth/login`;
 
 export const signIn = async (email, password) => {
   try {
@@ -10,6 +12,7 @@ export const signIn = async (email, password) => {
     return response.data;
   } catch (error) {
     console.error('Lỗi từ server khi đăng nhập:', error.response?.data || error.message);
-    throw error.response?.data || { error: "Lỗi server!" };
+    const errorMessage = error.response?.data?.message || error.message || "Lỗi server!";
+    throw new Error(errorMessage);
   }
 };

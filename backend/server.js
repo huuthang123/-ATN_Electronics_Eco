@@ -7,13 +7,21 @@ const morgan = require("morgan");
 const http = require("http");
 const { Server } = require("socket.io");
 const { connectDB } = require("./config/db");
+const { loadWord2Vec } = require('./utils/word2vecSearch');
 
 dotenv.config();
 const app = express();
 
 // Kết nối SQL Server
 connectDB();
-
+(async () => {
+  try {
+    await loadWord2Vec();
+    console.log('🚀 Word2Vec model ready!');
+  } catch (err) {
+    console.error('❌ Lỗi khi nạp model 2vec:', err);
+  }
+})();
 // Tạo HTTP server + Socket.IO
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
@@ -46,7 +54,9 @@ app.use("/api/reviews", require("./routes/ReviewRoutes"));
 app.use("/api/products", require("./routes/ProductRoutes"));
 app.use("/api/orders", require("./routes/OrderRoutes"));
 app.use("/api/cart", require("./routes/CartRoutes"));
+app.use("/api/carts", require("./routes/CartRoutes"));
 app.use("/api/address", require("./routes/AddressRoutes"));
+app.use("/api/addresses", require("./routes/AddressRoutes"));
 app.use("/api/categories", require("./routes/CategoryRoutes"));
 app.use("/api/attributes", require("./routes/AttributeRoutes"));
 app.use("/api/prices", require("./routes/PriceRoutes"));

@@ -13,11 +13,19 @@ const protect = async (req, res, next) => {
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select('-password');
+      const user = await User.findById(decoded.id);
 
-      if (!req.user) {
+      if (!user) {
         return res.status(401).json({ message: 'Không tìm thấy người dùng, token không hợp lệ' });
       }
+
+      // Loại bỏ password khỏi user object và đảm bảo có cả id và userId
+      const { password, ...userWithoutPassword } = user;
+      req.user = {
+        ...userWithoutPassword,
+        id: userWithoutPassword.userId, // Thêm id để tương thích
+        userId: userWithoutPassword.userId // Giữ nguyên userId
+      };
 
       next();
     } catch (error) {

@@ -1,40 +1,66 @@
 .related-items {
-  margin-top: 30px;
-  padding: 20px;
-  background: #fff; /* Nền trắng giống Shopee */
-  border-radius: 8px;
-  border: 1px solid #eee;
+  margin-top: 40px;
+  padding: 25px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 16px;
+  border: 2px solid #e74c3c;
+  box-shadow: 0 4px 16px rgba(231, 76, 60, 0.1);
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .related-items h3 {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  color: #333;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #e74c3c;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
 }
 
 .related-list {
   display: flex;
-  flex-direction: row; /* Hiển thị dạng ngang */
-  gap: 15px;
-  overflow-x: auto; /* Cuộn ngang */
-  padding-bottom: 10px;
-  white-space: nowrap; /* Đảm bảo các mục không xuống dòng */
+  flex-direction: row;
+  gap: 20px;
+  overflow-x: auto;
+  padding-bottom: 15px;
+  white-space: nowrap;
+  scrollbar-width: thin;
+  scrollbar-color: #e74c3c #f1f1f1;
+}
+
+.related-list::-webkit-scrollbar {
+  height: 8px;
+}
+
+.related-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.related-list::-webkit-scrollbar-thumb {
+  background: #e74c3c;
+  border-radius: 4px;
+}
+
+.related-list::-webkit-scrollbar-thumb:hover {
+  background: #c0392b;
 }
 
 .related-item {
-  flex: 0 0 auto; /* Không co giãn, giữ kích thước cố định */
-  width: 150px; /* Chiều rộng cố định cho mỗi sản phẩm */
-  padding: 10px;
-  background: #fff;
-  border-radius: 8px;
-  border: 1px solid #eee;
+  flex: 0 0 auto;
+  width: 180px;
+  padding: 15px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  border-radius: 12px;
+  border: 2px solid #e74c3c;
   text-align: center;
-  transition: all 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 16px rgba(231, 76, 60, 0.15);
 }
 
 .related-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(231, 76, 60, 0.25);
+  border-color: #c0392b;
 }
 
 .related-image {

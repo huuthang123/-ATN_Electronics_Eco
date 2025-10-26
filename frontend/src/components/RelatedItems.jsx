@@ -9,22 +9,42 @@ const RelatedItems = ({ relatedProducts, currentProductId, addToCart }) => {
   const [error, setError] = useState(null);
 
   const getPriceFromSchema = (product, size) => {
-    if (!product || !product.prices) {
-      console.error('Dữ liệu prices không tồn tại cho sản phẩm', product?.name);
+    // Kiểm tra nhiều cách để lấy giá
+    if (!product) {
       return undefined;
     }
-    const price = product.prices[size];
-    if (price === undefined) {
-      console.error('Không tìm thấy giá cho kích thước', size, 'của sản phẩm', product.name);
-      return undefined;
+
+    // Cách 1: Từ prices object
+    if (product.prices && product.prices[size]) {
+      return product.prices[size];
     }
-    return price;
+
+    // Cách 2: Từ trường price trực tiếp
+    if (product.price) {
+      return product.price;
+    }
+
+    // Cách 3: Từ priceSchema
+    if (product.priceSchema && product.priceSchema[size]) {
+      return product.priceSchema[size];
+    }
+
+    // Cách 4: Lấy giá đầu tiên có sẵn từ prices
+    if (product.prices && typeof product.prices === 'object') {
+      const firstPrice = Object.values(product.prices)[0];
+      if (firstPrice) {
+        return firstPrice;
+      }
+    }
+
+    // Mặc định trả về 0 để hiển thị
+    return 0;
   };
 
   const handleAddToCart = (product) => {
     const size = '250'; // Mặc định size nhỏ nhất
     const price = getPriceFromSchema(product, size);
-    if (!price) {
+    if (price === 0 || !price) {
       setError('Giá sản phẩm chưa được cập nhật. Vui lòng thử lại sau.');
       return;
     }
@@ -54,17 +74,35 @@ const RelatedItems = ({ relatedProducts, currentProductId, addToCart }) => {
               const currentPrice = getPriceFromSchema(product, size);
 
               return (
-                <div key={product._id} className="related-item">
+                <div key={product.productId || product._id} className="related-item">
                   <div
-                    onClick={() => navigate(`/${product.categoryName || 'product'}/${product._id}`)}
+                    onClick={() => {
+                      console.log('🔍 Related item data:', product);
+                      console.log('🔍 Product ID:', product.productId || product._id);
+                      console.log('🔍 Category:', product.categoryName);
+                      const productId = product.productId || product._id;
+                      if (!productId) {
+                        console.error('❌ No valid ID found for product:', product);
+                        return;
+                      }
+                      navigate(`/product/${encodeURIComponent(product.categoryName || 'product')}/${productId}`);
+                    }}
                     className="related-item-content"
                   >
-                    <img src={product.image} alt={product.name} className="related-image" />
+                    <img 
+                      src={product.image} 
+                      alt={product.name} 
+                      className="related-image"
+                      onError={(e) => {
+                        e.target.src = '/placeholder.png';
+                        e.target.onerror = null;
+                      }}
+                    />
                     <h4 className="related-name">{product.name}</h4>
                     <p className="related-price">
-                      {currentPrice
+                      {currentPrice && currentPrice > 0
                         ? `${currentPrice.toLocaleString()} VND / ${size}g`
-                        : `Giá chưa cập nhật ${size}g`}
+                        : `Liên hệ để biết giá`}
                     </p>
                   </div>
                   <div className="related-actions">
@@ -74,7 +112,7 @@ const RelatedItems = ({ relatedProducts, currentProductId, addToCart }) => {
                         e.stopPropagation();
                         handleAddToCart(product);
                       }}
-                      disabled={!currentPrice}
+                      disabled={!currentPrice || currentPrice === 0}
                     >
                       🛒
                     </button>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import "../styles/ProductItem.css";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import '../styles/ProductItem.css';
 
 const ProductItem = ({ product, addToCart, selectedAddress, categoryName }) => {
   const [selectedSize, setSelectedSize] = useState('');
@@ -29,7 +29,7 @@ const ProductItem = ({ product, addToCart, selectedAddress, categoryName }) => {
 
   const getPrice = (size) => {
     if (!product?.prices) {
-      console.error('No prices available for product:', product?.name);
+      console.error('❌ No prices available for product:', product?.name);
       return undefined;
     }
     if (product.prices instanceof Map) {
@@ -58,7 +58,7 @@ const ProductItem = ({ product, addToCart, selectedAddress, categoryName }) => {
       categoryName: categoryName || 'Không xác định',
       quantity
     };
-    console.log('Adding to cart:', cartItem);
+    console.log('🛒 Adding to cart:', cartItem);
 
     addToCart(cartItem);
     setError(null);
@@ -91,7 +91,7 @@ const ProductItem = ({ product, addToCart, selectedAddress, categoryName }) => {
       selected: true
     };
 
-    console.log('Navigating to payment with item:', item);
+    console.log('💳 Navigating to payment with item:', item);
 
     navigate('/payment', {
       state: {
@@ -113,7 +113,15 @@ const ProductItem = ({ product, addToCart, selectedAddress, categoryName }) => {
       ) : (
         <>
           <div className="product-image-container">
-            <img src={product.image} alt={product.name} className="product-image" />
+            <img 
+              src={product.image} 
+              alt={product.name} 
+              className="product-image"
+              onError={(e) => {
+                e.target.src = '/placeholder.png';
+                e.target.onerror = null;
+              }}
+            />
           </div>
           <div className="product-info">
             <h2 className="product-name">{product.name}</h2>
@@ -157,7 +165,7 @@ const ProductItem = ({ product, addToCart, selectedAddress, categoryName }) => {
               <div className="quantity-controls">
                 <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
                 <input type="text" value={quantity} readOnly />
-                <button onClick={() => setSelectedSize(quantity + 1)}>+</button>
+                <button onClick={() => setQuantity(quantity + 1)}>+</button>
               </div>
             </div>
             <div className="product-actions">

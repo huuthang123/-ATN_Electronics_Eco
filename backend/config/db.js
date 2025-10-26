@@ -1,11 +1,11 @@
 const sql = require('mssql');
 
 const config = {
-  user: 'sa',
-  password: 'Thang@123',
-  server: 'localhost',
-  port: 1433,
-  database: 'EcommerceDB',
+  user: process.env.DB_USER || 'sa',
+  password: process.env.DB_PASSWORD || 'Thang@123',
+  server: process.env.DB_SERVER || 'localhost',
+  port: parseInt(process.env.DB_PORT) || 1433,
+  database: process.env.DB_NAME || 'EcommerceDB',
   options: {
     encrypt: true,
     trustServerCertificate: true

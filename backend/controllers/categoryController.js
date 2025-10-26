@@ -6,13 +6,13 @@ class CategoryController {
   static async addCategory(req, res) {
     try {
       const { name, description, parentId, slug } = req.body;
-      const category = await Category.create({
+      await Category.create({
         name,
         description,
         parentId: parentId || null,
         slug,
       });
-      res.status(201).json({ success: true, category });
+      res.status(201).json({ success: true, message: 'Danh mục đã được tạo thành công' });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -21,7 +21,7 @@ class CategoryController {
   // [GET] /api/categories
   static async getCategories(req, res) {
     try {
-      const categories = await Category.findAll();
+      const categories = await Category.getAll();
       res.json({ success: true, categories });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -32,7 +32,7 @@ class CategoryController {
   static async getCategoryById(req, res) {
     try {
       const { id } = req.params;
-      const category = await Category.findByPk(id);
+      const category = await Category.getById(id);
       if (!category)
         return res.status(404).json({ message: 'Danh mục không tồn tại!' });
       res.json({ success: true, category });
@@ -45,11 +45,11 @@ class CategoryController {
   static async updateCategory(req, res) {
     try {
       const { id } = req.params;
-      const [count] = await Category.update(req.body, { where: { id } });
-      if (!count)
+      await Category.update(id, req.body);
+      const updated = await Category.getById(id);
+      if (!updated)
         return res.status(404).json({ message: 'Danh mục không tồn tại!' });
 
-      const updated = await Category.findByPk(id);
       res.json({ success: true, category: updated });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -60,7 +60,7 @@ class CategoryController {
   static async deleteCategory(req, res) {
     try {
       const { id } = req.params;
-      const deleted = await Category.destroy({ where: { id } });
+      const deleted = await Category.deleteById(id);
       if (!deleted)
         return res.status(404).json({ message: 'Danh mục không tồn tại!' });
 

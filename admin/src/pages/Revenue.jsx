@@ -13,8 +13,9 @@ const RevenuePage = () => {
   useEffect(() => {
     const fetchRevenue = async () => {
       try {
-        console.log('Calling API:', `http://localhost:5000/api/orders/revenue?startDate=${startDate}&endDate=${endDate}&groupBy=${groupBy}`);
-        const { data } = await axios.get('http://localhost:5000/api/orders/revenue', {
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        console.log('Calling API:', `${API_URL}/api/orders/revenue?startDate=${startDate}&endDate=${endDate}&groupBy=${groupBy}`);
+        const { data } = await axios.get(`${API_URL}/api/orders/revenue`, {
           params: { startDate, endDate, groupBy },
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });

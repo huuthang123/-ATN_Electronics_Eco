@@ -5,8 +5,8 @@ const router = express.Router();
 
 router.get('/', protect, CartController.getCart);
 router.post('/add', protect, CartController.addToCart);
-router.post('/:productId/increase', protect, CartController.increaseQuantity);
-router.post('/:productId/decrease', protect, CartController.decreaseQuantity);
+router.post('/increase/:productId', protect, CartController.increaseQuantity);
+router.post('/decrease/:productId', protect, CartController.decreaseQuantity);
 router.delete('/:productId', protect, CartController.removeFromCart);
 
 module.exports = router;

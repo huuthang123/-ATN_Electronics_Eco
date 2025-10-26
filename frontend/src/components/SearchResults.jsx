@@ -13,10 +13,20 @@ function SearchResults() {
     if (keyword.trim()) {
       setLoading(true);
       axios
-        .get(`http://localhost:5000/api/products/search-embedding?keyword=${encodeURIComponent(keyword)}`)
+        .get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/products/search-embedding?keyword=${encodeURIComponent(keyword)}`)
         .then((res) => {
-          // Backend bạn trả về dạng { success: true, results: [...] }
-          setResults(res.data.results || []);
+          // Backend trả về dạng { success: true, results: [...] }
+          const results = res.data.results || [];
+          // Chuẩn hóa dữ liệu để có đầy đủ thông tin
+          const normalized = results.map((item) => ({
+            _id: item.id,
+            name: item.name,
+            image: item.image,
+            prices: item.prices,
+            categoryName: item.category,
+            score: item.score
+          }));
+          setResults(normalized);
           setLoading(false);
         })
         .catch((err) => {
@@ -44,15 +54,34 @@ function SearchResults() {
 
   return (
     <div className="search-results">
-      <h2>Kết quả tìm kiếm cho: "{keyword}"</h2>
+      <h2>Kết quả tìm kiếm embedding cho: "{keyword}"</h2>
+      <p className="search-info">Tìm thấy {results.length} sản phẩm liên quan</p>
       <div className="product-list">
         {results.map((p) => {
           const price = getFirstValidPrice(p.prices);
           return (
             <div key={p._id} className="product-item">
-              <img src={p.image} alt={p.name} />
-              <h3>{p.name}</h3>
-              <p>{price ? `${price.toLocaleString()}₫` : "Giá chưa cập nhật"}</p>
+              <div className="product-image">
+                <img 
+                  src={p.image} 
+                  alt={p.name}
+                  onError={(e) => {
+                    e.target.src = '/placeholder.png';
+                    e.target.onerror = null;
+                  }}
+                />
+              </div>
+              <div className="product-info">
+                <h3>{p.name}</h3>
+                <p className="category">{p.categoryName}</p>
+                <p className="price">{price ? `${price.toLocaleString()}₫` : "Giá chưa cập nhật"}</p>
+                {p.score && (
+                  <div className="relevance-score">
+                    <span className="score-label">Độ liên quan:</span>
+                    <span className="score-value">{(p.score * 100).toFixed(1)}%</span>
+                  </div>
+                )}
+              </div>
             </div>
           );
         })}

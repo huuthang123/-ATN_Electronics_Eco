@@ -35,7 +35,7 @@ const Profile = () => {
     const fetchOrders = async () => {
       if (!user?.token) return;
       try {
-        const response = await axios.get('http://localhost:5000/api/orders/my-orders', {
+        const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/orders/my-orders`, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
 
@@ -46,7 +46,7 @@ const Profile = () => {
         const categoryPromises = uniqueOrders.flatMap(order =>
           order.products.map(async (item) => {
             try {
-              const productResponse = await axios.get(`http://localhost:5000/api/products/${item.productId._id}`);
+              const productResponse = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/products/${item.productId._id}`);
               return { productId: item.productId._id, category: productResponse.data.category };
             } catch (error) {
               return { productId: item.productId._id, category: 'unknown' };
@@ -76,7 +76,7 @@ const Profile = () => {
 
   const fetchExistingReview = async (orderId, productId) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/reviews/order/${orderId}/product/${productId}`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/reviews/order/${orderId}/product/${productId}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
@@ -92,7 +92,7 @@ const Profile = () => {
   const handleSubmitReview = async (orderId, productId) => {
     try {
       await axios.post(
-        'http://localhost:5000/api/reviews',
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/reviews`,
         {
           orderId,
           productId,
@@ -129,7 +129,7 @@ const Profile = () => {
     e.preventDefault();
     try {
       const response = await axios.put(
-        'http://localhost:5000/api/users/change-password',
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/users/change-password`,
         { oldPassword, newPassword },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );

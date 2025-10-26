@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/attributes';
+import { apiConfig } from '../config/api';
+
+const API_URL = `${apiConfig.baseURL}/api/attributes`;
 
 export const getAttributes = async () => {
   const response = await axios.get(`${API_URL}/list`);

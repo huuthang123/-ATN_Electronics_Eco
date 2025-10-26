@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import ShippingAddressForm from "./ShippingAddressForm";
+import CartItemInfo from "./CartItemInfo";
 import "../styles/Cart.css";
 
 const Cart = () => {
@@ -49,8 +50,8 @@ const Cart = () => {
 
   const handleViewProduct = (productId, categoryName) => {
     const productPath = categoryName
-      ? `/${categoryName}/${productId}`
-      : `/product/${productId}`;
+      ? `/product/${encodeURIComponent(categoryName)}/${productId}`
+      : `/product/unknown/${productId}`;
     navigate(productPath);
   };
 
@@ -62,7 +63,7 @@ const Cart = () => {
     <div className="cart-container">
       <div className="cart-header">
         <div className="shop-logo">
-          <h1>Hương Việt Tinh</h1>
+          <h1>⚡ TechStore</h1>
           <p>Giỏ Hàng ({totalItems} sản phẩm)</p>
         </div>
       </div>
@@ -122,6 +123,9 @@ const Cart = () => {
           <p className="empty-cart">Giỏ hàng của bạn đang trống.</p>
         ) : (
           cartItems.map((item) => {
+            console.log('🔍 Cart item:', item);
+            console.log('🔍 Item name:', item.name);
+            console.log('🔍 Item attributes:', item.attributes);
             const categoryName = item.categoryId?.name || "Đang cập nhật";
             const size = item.attributes?.size || '250';
 
@@ -143,9 +147,22 @@ const Cart = () => {
                   onClick={() => handleViewProduct(item.productId, categoryName)}
                   style={{ cursor: "pointer" }}
                 >
-                  <img src={item.image} alt={item.name} className="cart-item-image" />
+                  <img 
+                    src={item.image} 
+                    alt={item.name} 
+                    className="cart-item-image"
+                    onError={(e) => {
+                      e.target.src = '/placeholder.png';
+                      e.target.onerror = null;
+                    }}
+                  />
                   <div className="cart-item-info">
-                    <p>{item.name}</p>
+                    <p>
+                      <CartItemInfo 
+                        productId={item.productId} 
+                        fallbackName={item.name || 'Tên sản phẩm'} 
+                      />
+                    </p>
                   </div>
                 </div>
                 <div className="cart-item-classification">

@@ -28,4 +28,13 @@ async function comparePassword(plain, hash) {
   return bcrypt.compare(plain, hash);
 }
 
-module.exports = { getAll, findById, findByEmail, create, comparePassword };
+async function updatePassword(userId, newPassword) {
+  const hash = await bcrypt.hash(newPassword, 10);
+  await sql.query`
+    UPDATE Users 
+    SET password = ${hash}, updatedAt = GETDATE()
+    WHERE userId = ${userId}
+  `;
+}
+
+module.exports = { getAll, findById, findByEmail, create, comparePassword, updatePassword };

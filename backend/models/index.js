@@ -6,14 +6,13 @@ const Product = require("./Product");
 const Category = require("./Category");
 const Address = require("./Address");
 const Cart = require("./Cart");
-const CartItem = require("./CartItem");
 const Order = require("./Order");
 const OrderItem = require("./OrderItem");
 const Review = require("./Review");
 const ProductSummary = require("./ProductSummary");
 const ProductAttributeValue = require("./ProductAttributeValue");
-const Price = require("./Price"); // ✅ chính là ProductPrice
-const Promotion = require("./Promotion"); // ✅ bạn đã có
+const Price = require("./Price");
+const Promotion = require("./Promotion");
 
 module.exports = {
   sql,
@@ -22,7 +21,6 @@ module.exports = {
   Category,
   Address,
   Cart,
-  CartItem,
   Order,
   OrderItem,
   Review,

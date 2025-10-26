@@ -3,9 +3,11 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #f5f5f0; /* Màu nền be nhạt */
-    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
+    font-family: 'Roboto', sans-serif;
     margin-top: 80px;
+    min-height: 100vh;
+    color: var(--text-primary);
   }
   
   /* Header */
@@ -13,45 +15,57 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 15px 0;
-    border-bottom: 1px solid #e0d8c3; /* Đường viền nâu nhạt */
+    padding: 20px 0;
+    border-bottom: 2px solid var(--primary-red);
+    margin-bottom: 30px;
   }
   
   .shop-logo h1 {
-    font-size: 2em;
-    color: #6b4e31; /* Màu nâu đậm */
-    font-family: 'Georgia', serif;
+    font-size: 2.5em;
+    color: var(--primary-red);
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(220, 38, 38, 0.1);
   }
   
   .shop-logo p {
-    font-size: 1em;
-    color: #8a7a5e; /* Màu nâu nhạt */
+    font-size: 1.1em;
+    color: var(--text-secondary);
+    font-family: 'Roboto', sans-serif;
+    margin: 5px 0 0 0;
+    font-weight: 500;
   }
   
   /* Address Section */
   .address-section {
-    background-color: #fffdf7; /* Màu trắng kem */
-    padding: 20px;
+    background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
+    padding: 25px;
     margin: 20px 0;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--primary-red);
   }
   
   .address-section h3 {
-    font-size: 1.2em;
-    color: #6b4e31;
-    margin-bottom: 10px;
+    font-size: 1.4em;
+    color: var(--primary-red);
+    margin-bottom: 15px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 600;
   }
   
   .address-section h4 {
     font-size: 1em;
-    color: #6b4e31;
+    color: var(--text-primary);
     margin: 10px 0;
+    font-weight: 500;
   }
   
   .selected-address p {
-    color: #5a4b3c;
+    color: var(--text-primary);
     margin: 5px 0;
+    font-weight: 400;
   }
   
   .address-list {
@@ -60,73 +74,103 @@
   }
   
   .address-item {
-    padding: 10px;
-    border: 1px solid #e0d8c3;
-    border-radius: 5px;
-    margin-bottom: 10px;
+    padding: 15px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 15px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    background: var(--white);
   }
   
   .address-item:hover {
-    background-color: #f0ece2;
+    background-color: var(--light-red);
+    border-color: var(--primary-red);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
   }
   
   .address-item p {
     margin: 5px 0;
-    color: #5a4b3c;
+    color: var(--text-primary);
+    font-weight: 400;
   }
   
   .add-address-btn,
   .change-address-btn {
-    background-color: #a3b18a; /* Màu xanh lá nhạt */
-    color: white;
+    background: linear-gradient(135deg, var(--primary-red), var(--accent-red));
+    color: var(--white);
     border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
+    padding: 12px 20px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
     margin-top: 10px;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    box-shadow: var(--shadow);
   }
   
   .add-address-btn:hover,
   .change-address-btn:hover {
-    background-color: #8a9a5b;
+    background: linear-gradient(135deg, var(--dark-red), var(--primary-red));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
   }
   
   .error-message {
-    color: #d9534f;
+    color: var(--primary-red);
     margin: 10px 0;
+    font-weight: 500;
+    background: var(--light-red);
+    padding: 10px;
+    border-radius: 5px;
+    border-left: 4px solid var(--primary-red);
   }
   
   /* Cart Items */
   .cart-items {
-    background-color: #fffdf7;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--primary-red);
+    margin-bottom: 30px;
   }
   
   .cart-item-header {
     display: grid;
     grid-template-columns: 50px 2fr 1fr 1fr 1fr 1fr 100px;
-    padding: 10px 0;
-    border-bottom: 1px solid #e0d8c3;
-    font-weight: bold;
-    color: #6b4e31;
+    padding: 20px 0;
+    border-bottom: 3px solid var(--primary-red);
+    font-weight: 600;
+    color: var(--primary-red);
+    font-family: 'Roboto', sans-serif;
+    font-size: 1em;
+    text-align: center;
+    align-items: center;
   }
   
   .cart-item {
     display: grid;
     grid-template-columns: 50px 2fr 1fr 1fr 1fr 1fr 100px;
     align-items: center;
-    padding: 15px 0;
-    border-bottom: 1px solid #e0d8c3;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+  
+  .cart-item:hover {
+    background-color: var(--light-red);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
   }
   
   .cart-item-details {
     display: flex;
     align-items: center;
+    text-align: left;
   }
   
   .cart-item-image {
@@ -134,59 +178,84 @@
     height: 80px;
     object-fit: cover;
     margin-right: 15px;
-    border-radius: 5px;
+    border-radius: 8px;
+    border: 2px solid var(--border-color);
+    box-shadow: var(--shadow);
   }
   
   .cart-item-info p {
     margin: 0;
-    color: #5a4b3c;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 0.95em;
   }
   
   .cart-item-classification {
-    color: #8a7a5e;
+    color: var(--text-secondary);
     font-size: 0.9em;
+    font-weight: 500;
   }
   
   .cart-item-price,
   .cart-item-total {
-    color: #6b4e31;
+    color: var(--primary-red);
     font-weight: bold;
+    font-size: 1em;
   }
   
   .cart-item-quantity {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
   }
   
   .cart-item-quantity button {
-    background-color: #e0d8c3;
+    background: linear-gradient(135deg, var(--primary-red), var(--accent-red));
+    color: var(--white);
     border: none;
-    padding: 5px 10px;
+    padding: 8px 12px;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: 5px;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
   }
   
   .cart-item-quantity button:hover {
-    background-color: #d1c7a6;
+    background: linear-gradient(135deg, var(--dark-red), var(--primary-red));
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
   }
   
   .cart-item-actions button {
-    background: none;
+    background: linear-gradient(135deg, var(--primary-red), var(--accent-red));
+    color: var(--white);
     border: none;
-    color: #a3b18a;
+    padding: 8px 15px;
     cursor: pointer;
     font-size: 0.9em;
+    border-radius: 5px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
   }
   
   .cart-item-actions button:hover {
-    color: #8a9a5b;
+    background: linear-gradient(135deg, var(--dark-red), var(--primary-red));
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
   }
   
   .empty-cart {
     text-align: center;
-    color: #8a7a5e;
-    padding: 20px;
+    color: var(--text-secondary);
+    padding: 40px 20px;
+    font-size: 1.1em;
+    font-weight: 500;
+    background: var(--light-gray);
+    border-radius: 8px;
+    border: 2px dashed var(--border-color);
   }
   
   /* Cart Summary */
@@ -194,94 +263,81 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    padding: 20px 0;
-    background-color: #fffdf7;
+    padding: 25px;
+    background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
     margin-top: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 2px solid var(--primary-red);
   }
   
   .summary-details p {
     margin: 0;
-    font-size: 1.2em;
-    color: #6b4e31;
+    font-size: 1.3em;
+    color: var(--text-primary);
+    font-weight: 600;
   }
   
   .summary-details span {
-    color: #a3b18a;
+    color: var(--primary-red);
     font-weight: bold;
+    font-size: 1.1em;
   }
   
   .checkout-btn {
-    background-color: #a3b18a;
-    color: white;
+    background: linear-gradient(135deg, var(--primary-red), var(--accent-red));
+    color: var(--white);
     border: none;
-    padding: 10px 30px;
+    padding: 15px 35px;
     margin-left: 20px;
-    border-radius: 5px;
+    border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    font-family: 'Roboto', sans-serif;
+    font-weight: 600;
+    font-size: 1.1em;
+    box-shadow: var(--shadow);
   }
   
   .checkout-btn:hover {
-    background-color: #8a9a5b;
+    background: linear-gradient(135deg, var(--dark-red), var(--primary-red));
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
   }
   
   .checkout-btn:disabled {
-    background-color: #d1c7a6;
+    background: linear-gradient(135deg, var(--text-secondary), var(--border-color));
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+    opacity: 0.6;
   }
-  /* styles/Cart.css */
-
-/* ... Giữ nguyên các style cũ, chỉ thêm hoặc chỉnh sửa phần address-section ... */
-
-/* Address Section */
-.address-section {
-  background-color: #fffdf7; /* Màu trắng kem */
-  padding: 20px;
-  margin: 20px 0;
-  border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-}
-
-.address-section h3 {
-  font-size: 1.2em;
-  color: #6b4e31;
-  margin-bottom: 10px;
-}
-
-.selected-address p {
-  color: #5a4b3c;
-  margin: 5px 0;
-}
-
-.add-address-btn,
-.change-address-btn {
-  background-color: #a3b18a; /* Màu xanh lá nhạt */
-  color: white;
-  border: none;
-  padding: 8px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s;
-  margin-top: 10px;
-  margin-right: 10px; /* Thêm khoảng cách giữa các nút nếu cần */
-}
-
-.add-address-btn:hover,
-.change-address-btn:hover {
-  background-color: #8a9a5b;
-}
-
-.error-message {
-  color: #d9534f;
-  margin: 10px 0;
-}
-
-/* Đảm bảo ShippingAddressForm hiển thị đẹp trong address-section */
-.address-section .shipping-address-container {
-  background: none; /* Bỏ nền trắng của form để đồng bộ với address-section */
-  padding: 0; /* Bỏ padding thừa */
-  box-shadow: none; /* Bỏ shadow để không chồng lấn */
-  max-width: 100%; /* Đảm bảo form trải rộng trong address-section */
+/* Responsive Design */
+@media (max-width: 768px) {
+  .cart-container {
+    padding: 10px;
+    margin-top: 60px;
+  }
+  
+  .cart-item-header,
+  .cart-item {
+    grid-template-columns: 30px 1fr 1fr 1fr 1fr 1fr 80px;
+    font-size: 0.8em;
+  }
+  
+  .cart-item-image {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .cart-summary {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .checkout-btn {
+    margin-left: 0;
+    width: 100%;
+  }
 }

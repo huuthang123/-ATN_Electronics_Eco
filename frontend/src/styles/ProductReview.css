@@ -1,16 +1,19 @@
 .product-review-container {
   margin: 20px 0;
-  padding: 15px;
+  padding: 20px;
   background: #ffffff;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .product-review-container h3 {
   color: #2c3e50;
-  margin-bottom: 10px;
-  font-size: 18px;
+  margin-bottom: 15px;
+  font-size: 20px;
+  font-weight: 600;
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
 }
 
 .reviews-section {
@@ -18,21 +21,25 @@
 }
 
 .toggle-btn {
-  padding: 8px 16px;
-  background: #3498db;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
-  display: inline-flex; /* Thay vì width: 100%, dùng inline-flex để nút chỉ rộng vừa đủ */
+  display: inline-flex;
   align-items: center;
-  gap: 8px; /* Khoảng cách giữa text và icon */
-  transition: background 0.3s, transform 0.1s;
+  gap: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(231, 76, 60, 0.3);
 }
 
 .toggle-btn:hover {
-  background: #2980b9;
-  transform: scale(1.02); /* Hiệu ứng phóng to nhẹ khi hover */
+  background: linear-gradient(135deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(231, 76, 60, 0.4);
 }
 
 .toggle-btn::after {
@@ -52,11 +59,18 @@
 }
 
 .review-item {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-  background: #f9f9f9;
-  border-radius: 5px;
-  margin-bottom: 5px;
+  padding: 15px;
+  border-bottom: 1px solid #e0e0e0;
+  background: linear-gradient(135deg, #f8f9fa, #ffffff);
+  border-radius: 8px;
+  margin-bottom: 10px;
+  border-left: 4px solid #e74c3c;
+  transition: all 0.3s ease;
+}
+
+.review-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .review-header {
@@ -91,10 +105,12 @@
 }
 
 .average-rating {
-  padding: 10px;
-  background: #e6f0fa;
-  border-radius: 5px;
+  padding: 15px;
+  background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
+  border-radius: 8px;
   font-size: 14px;
+  border: 1px solid #b3d9ff;
+  margin-top: 10px;
 }
 
 .average-rating strong {

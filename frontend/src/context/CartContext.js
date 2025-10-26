@@ -12,19 +12,33 @@ export const CartProvider = ({ children }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  const loadCartFromServer = useCallback(async () => {
+  const fetchCartFromServer = useCallback(async () => {
     if (!user?.token) return;
     try {
       const cart = await fetchCart(user.token);
-      const itemsWithSelection = cart.items.map(item => ({
+      console.log('Cart data from server:', cart);
+      
+      // Backend trả về { userId, items: [...] }
+      const items = cart.items || cart || [];
+      const itemsWithSelection = items.map(item => ({
         ...item,
         selected: item.selected || false,
       }));
+      
+      console.log('Processed cart items:', itemsWithSelection);
       setCartItems(itemsWithSelection);
       localStorage.setItem("cartItemsBackup", JSON.stringify(itemsWithSelection));
     } catch (error) {
       console.error("Lỗi khi tải giỏ hàng từ server:", error.response?.data || error.message);
-      setCartItems([]);
+      // Fallback to localStorage - gọi trực tiếp
+      try {
+        const savedCart = localStorage.getItem("cartItems") || localStorage.getItem("cartItemsBackup");
+        const parsedCart = savedCart ? JSON.parse(savedCart) : [];
+        setCartItems(parsedCart);
+      } catch (localError) {
+        console.error("Lỗi khi lấy giỏ hàng từ localStorage:", localError);
+        setCartItems([]);
+      }
     }
   }, [user]);
 
@@ -41,11 +55,11 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => {
     if (user?.token) {
-      loadCartFromServer();
+      fetchCartFromServer();
     } else {
       loadCartFromLocalStorage();
     }
-  }, [user, loadCartFromServer, loadCartFromLocalStorage]);
+  }, [user, fetchCartFromServer, loadCartFromLocalStorage]);
 
   useEffect(() => {
     if (!user?.token) {
@@ -56,72 +70,108 @@ export const CartProvider = ({ children }) => {
   const toggleCart = () => setIsOpen(prev => !prev);
 
   const handleAddToCart = async (product) => {
-  const { productId, quantity = 1, price, image, name, categoryName, attributes = {} } = product;
+    const { productId, quantity = 1, price, image, name, categoryName, attributes = {} } = product;
 
-  if (user?.token) {
-    try {
-      await addToCart(product, user.token);
-      await loadCartFromServer();
-    } catch (error) {
-      console.error("Lỗi khi thêm vào giỏ hàng:", error.response?.data || error.message);
-    }
-  } else {
-    setCartItems(prev => {
-      const existingItem = prev.find(item =>
-        item.productId === productId &&
-        JSON.stringify(item.attributes) === JSON.stringify(attributes)
-      );
+    if (user?.token) {
+      try {
+        await addToCart(product, user.token);
+        await fetchCartFromServer();
+      } catch (error) {
+        console.error("Lỗi khi thêm vào giỏ hàng:", error.response?.data || error.message);
+        // Fallback to local storage if server fails
+        setCartItems(prev => {
+          const existingItem = prev.find(item =>
+            item.productId === productId &&
+            JSON.stringify(item.attributes) === JSON.stringify(attributes)
+          );
 
-      let updatedCart;
-      if (existingItem) {
-        updatedCart = prev.map(item =>
-          item.productId === productId && JSON.stringify(item.attributes) === JSON.stringify(attributes)
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        );
-      } else {
-        updatedCart = [...prev, { productId, quantity, name, price, image, categoryName, attributes, selected: false }];
+          let updatedCart;
+          if (existingItem) {
+            updatedCart = prev.map(item =>
+              item.productId === productId && JSON.stringify(item.attributes) === JSON.stringify(attributes)
+                ? { ...item, quantity: item.quantity + quantity }
+                : item
+            );
+          } else {
+            updatedCart = [...prev, { productId, quantity, name, price, image, categoryName, attributes, selected: false }];
+          }
+
+          localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+          return updatedCart;
+        });
       }
+    } else {
+      setCartItems(prev => {
+        const existingItem = prev.find(item =>
+          item.productId === productId &&
+          JSON.stringify(item.attributes) === JSON.stringify(attributes)
+        );
 
-      localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-      return updatedCart;
-    });
-  }
-};
+        let updatedCart;
+        if (existingItem) {
+          updatedCart = prev.map(item =>
+            item.productId === productId && JSON.stringify(item.attributes) === JSON.stringify(attributes)
+              ? { ...item, quantity: item.quantity + quantity }
+              : item
+          );
+        } else {
+          updatedCart = [...prev, { productId, quantity, name, price, image, categoryName, attributes, selected: false }];
+        }
+
+        localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+        return updatedCart;
+      });
+    }
+  };
 
   // src/context/CartContext.js (trích đoạn liên quan)
-const handleIncreaseQuantity = async (productId, attributes) => {
-  if (user?.token) {
-    try {
-      await increaseQuantity(productId, attributes, user.token);
-      await loadCartFromServer();
-    } catch (error) {
-      console.error("Lỗi khi tăng số lượng:", error.response?.data || error.message);
-      alert(`Lỗi: ${error.response?.data?.message || 'Không thể tăng số lượng'}`);
+  const handleIncreaseQuantity = async (productId, attributes) => {
+    console.log('🔄 handleIncreaseQuantity called with:', { productId, attributes, hasToken: !!user?.token });
+    
+    if (user?.token) {
+      try {
+        console.log('🔄 Calling increaseQuantity API...');
+        await increaseQuantity(productId, attributes, user.token);
+        console.log('✅ increaseQuantity API success, fetching cart...');
+        await fetchCartFromServer();
+        console.log('✅ Cart updated successfully');
+      } catch (error) {
+        console.error("❌ Lỗi khi tăng số lượng:", error);
+        console.error("❌ Error details:", error.response?.data || error.message);
+        alert(`Lỗi: ${error.response?.data?.message || error.message || 'Không thể tăng số lượng'}`);
+      }
+    } else {
+      console.log('🔄 No token, updating local state...');
+      setCartItems(prev => {
+        const updatedCart = prev.map(item =>
+          item.productId === productId && JSON.stringify(item.attributes) === JSON.stringify(attributes)
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+        localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+        console.log('✅ Local cart updated');
+        return updatedCart;
+      });
     }
-  } else {
-    setCartItems(prev => {
-      const updatedCart = prev.map(item =>
-        item.productId === productId && JSON.stringify(item.attributes) === JSON.stringify(attributes)
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      );
-      localStorage.setItem("cartItems", JSON.stringify(updatedCart));
-      return updatedCart;
-    });
-  }
-};
+  };
 
 const handleDecreaseQuantity = async (productId, attributes) => {
+  console.log('🔄 handleDecreaseQuantity called with:', { productId, attributes, hasToken: !!user?.token });
+  
   if (user?.token) {
     try {
+      console.log('🔄 Calling decreaseQuantity API...');
       await decreaseQuantity(productId, attributes, user.token);
-      await loadCartFromServer();
+      console.log('✅ decreaseQuantity API success, fetching cart...');
+      await fetchCartFromServer();
+      console.log('✅ Cart updated successfully');
     } catch (error) {
-      console.error("Lỗi khi giảm số lượng:", error.response?.data || error.message);
-      alert(`Lỗi: ${error.response?.data?.message || 'Không thể giảm số lượng'}`);
+      console.error("❌ Lỗi khi giảm số lượng:", error);
+      console.error("❌ Error details:", error.response?.data || error.message);
+      alert(`Lỗi: ${error.response?.data?.message || error.message || 'Không thể giảm số lượng'}`);
     }
   } else {
+    console.log('🔄 No token, updating local state...');
     setCartItems(prev => {
       const updatedCart = prev
         .map(item =>
@@ -131,24 +181,33 @@ const handleDecreaseQuantity = async (productId, attributes) => {
         )
         .filter(item => item.quantity > 0);
       localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+      console.log('✅ Local cart updated');
       return updatedCart;
     });
   }
 };
 
 const handleRemoveFromCart = async (productId, attributes) => {
+  console.log('🔄 handleRemoveFromCart called with:', { productId, attributes, hasToken: !!user?.token });
+  
   if (user?.token) {
     try {
+      console.log('🔄 Calling removeFromCart API...');
       await removeFromCart(productId, attributes, user.token);
-      await loadCartFromServer();
+      console.log('✅ removeFromCart API success, fetching cart...');
+      await fetchCartFromServer();
+      console.log('✅ Cart updated successfully');
     } catch (error) {
-      console.error("Lỗi khi xóa khỏi giỏ hàng:", error.response?.data || error.message);
-      alert(`Lỗi: ${error.response?.data?.message || 'Không thể xóa sản phẩm'}`);
+      console.error("❌ Lỗi khi xóa khỏi giỏ hàng:", error);
+      console.error("❌ Error details:", error.response?.data || error.message);
+      alert(`Lỗi: ${error.response?.data?.message || error.message || 'Không thể xóa sản phẩm'}`);
     }
   } else {
+    console.log('🔄 No token, updating local state...');
     setCartItems(prev => {
       const updatedCart = prev.filter(item => !(item.productId === productId && JSON.stringify(item.attributes) === JSON.stringify(attributes)));
       localStorage.setItem("cartItems", JSON.stringify(updatedCart));
+      console.log('✅ Local cart updated');
       return updatedCart;
     });
   }
@@ -177,10 +236,10 @@ const handleRemoveFromCart = async (productId, attributes) => {
   const clearCart = async () => {
     if (user?.token) {
       try {
-        await axios.delete(`http://localhost:5000/api/carts`, {
+        await axios.delete(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/carts`, {
           headers: { Authorization: `Bearer ${user.token}` },
         });
-        await loadCartFromServer();
+        await fetchCartFromServer();
       } catch (error) {
         console.error("Lỗi khi xóa giỏ hàng:", error.response?.data || error.message);
       }
@@ -213,7 +272,7 @@ const handleRemoveFromCart = async (productId, attributes) => {
         decreaseQuantity: handleDecreaseQuantity,
         selectAll: handleSelectAll,
         toggleItemSelection: handleToggleItemSelection,
-        fetchCartFromServer: loadCartFromServer,
+        fetchCartFromServer: fetchCartFromServer,
         loadCartFromLocalStorage,
         clearCart,
         displayAttributes,

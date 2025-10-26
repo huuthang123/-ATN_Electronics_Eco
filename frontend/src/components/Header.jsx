@@ -1,5 +1,5 @@
 // src/components/Header.jsx
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import '../styles/Header.css';
 import { useAuth } from '../context/AuthContext';
@@ -11,27 +11,40 @@ function Header() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
 
-    const toggleMenu = () => {
-        setMenuOpen(!menuOpen);
-    };
+    const toggleMenu = useCallback(() => {
+        setMenuOpen(prev => !prev);
+    }, []);
 
-    const toggleDropdown = () => {
-        setDropdownOpen(!dropdownOpen);
-    };
+    const toggleDropdown = useCallback(() => {
+        setDropdownOpen(prev => !prev);
+    }, []);
 
-    const handleLogout = () => {
+    const handleLogout = useCallback(() => {
         logout();
         setDropdownOpen(false);
         navigate("/");
-    };
+    }, [logout, navigate]);
 
     // ✅ Xử lý Enter để chuyển trang tìm kiếm embedding
-    const handleSearchKeyDown = (e) => {
+    const handleSearchKeyDown = useCallback((e) => {
         if (e.key === "Enter" && searchTerm.trim()) {
             navigate(`/search?keyword=${encodeURIComponent(searchTerm)}`);
             setSearchTerm("");
         }
-    };
+    }, [searchTerm, navigate]);
+
+    const handleSearchChange = useCallback((e) => {
+        setSearchTerm(e.target.value);
+    }, []);
+
+    // Memoize user info để tránh re-render
+    const userInfo = useMemo(() => {
+        if (!user || user.isGuest) return null;
+        return {
+            username: user.username,
+            isLoggedIn: true
+        };
+    }, [user]);
 
     return (
         <header className="header">
@@ -39,12 +52,9 @@ function Header() {
                 <div className="header-content">
                     {/* Logo */}
                     <div className="logo">
-                        <Link to="/">
-                            <img
-                                src="/images/TMKLogo2020Xanh.png"
-                                alt="Thai Market Logo"
-                                onError={(e) => (e.target.src = 'https://via.placeholder.com/150')}
-                            />
+                        <Link to="/" className="logo-text">
+                            <span className="logo-icon">⚡</span>
+                            <span className="logo-name">TechStore</span>
                         </Link>
                     </div>
 
@@ -65,7 +75,7 @@ function Header() {
                             type="text"
                             placeholder="🔍 Tìm sản phẩm..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={handleSearchChange}
                             onKeyDown={handleSearchKeyDown}
                             className="search-input"
                         />
@@ -73,10 +83,10 @@ function Header() {
 
                     {/* User Actions */}
                     <div className="user-actions">
-                        {user && !user.isGuest ? (
+                        {userInfo ? (
                             <div className="user-dropdown">
                                 <div className="user-info" onClick={toggleDropdown}>
-                                    <span className="username">Chào, {user.username}</span>
+                                    <span className="username">Chào, {userInfo.username}</span>
                                     <span className={`dropdown-icon ${dropdownOpen ? 'open' : ''}`}>
                                         <i className="fas fa-caret-down"></i>
                                     </span>

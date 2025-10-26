@@ -1,7 +1,9 @@
 // src/services/signupService.js
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/auth/register'; // Sửa endpoint
+import { apiConfig } from '../config/api';
+
+const API_URL = `${apiConfig.baseURL}/api/auth/register`;
 
 export const registerUser = async ({ username, email, phone, password }) => { // Thêm username, phone
   try {
@@ -10,6 +12,7 @@ export const registerUser = async ({ username, email, phone, password }) => { //
     return response.data;
   } catch (error) {
     console.error('Lỗi từ server khi đăng ký:', error.response?.data || error.message);
-    throw error.response?.data || new Error('Đăng ký thất bại');
+    const errorMessage = error.response?.data?.message || error.message || 'Đăng ký thất bại';
+    throw new Error(errorMessage);
   }
 };

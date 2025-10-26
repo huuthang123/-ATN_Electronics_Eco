@@ -77,10 +77,12 @@ function App() {
               } 
             />
             <Route 
-              path="/:category/:id" 
+              path="/product/:category/:id" 
               element={
                 <div className="main-content">
+                  <Header />
                   <ProductDetail />
+                  <Footer />
                 </div>
               } 
             />

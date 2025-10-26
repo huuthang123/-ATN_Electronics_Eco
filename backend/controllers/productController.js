@@ -1,34 +1,39 @@
 const db = require('../models');
 const Product = db.Product;
 const Category = db.Category;
-const { Op } = require('sequelize');
 const axios = require('axios');
+const { findSimilarProducts } = require('../utils/word2vecSearch');
 
-// Gọi API Python để lấy embedding từ văn bản
-async function getEmbeddingFromPython(text) {
-  const response = await axios.post('http://localhost:8000/embedding', { text });
-  return response.data.embedding;
-}
 
-// Tính độ tương đồng cosine
-function cosineSimilarity(vecA, vecB) {
-  const dot = vecA.reduce((s, a, i) => s + a * vecB[i], 0);
-  const magA = Math.sqrt(vecA.reduce((s, a) => s + a * a, 0));
-  const magB = Math.sqrt(vecB.reduce((s, b) => s + b * b, 0));
-  if (!magA || !magB) return 0;
-  return dot / (magA * magB);
-}
 
 class ProductController {
+  static async searchProductsByEmbedding(req, res) {
+    try {
+      const { keyword } = req.query;
+      if (!keyword) {
+        return res.status(400).json({ message: 'Thiếu từ khóa' });
+      }
+  
+      const products = await Product.getAll();
+      const results = findSimilarProducts(keyword, products)
+        .filter(p => p.similarity > 0.3)
+        .slice(0, 20);
+  
+      res.json({ success: true, results });
+    } catch (error) {
+      console.error('❌ Lỗi tìm kiếm embedding:', error);
+      res.status(500).json({ success: false, message: error.message });
+    }
+  }
   // [POST] /api/products
   static async addProduct(req, res) {
     try {
       const { name, description, image, categoryId, prices, attributes, stock } = req.body;
       const embedding = await getEmbeddingFromPython(name || '');
-      const product = await Product.create({
+      await Product.create({
         name, description, image, categoryId, prices, attributes, stock, embedding,
       });
-      res.status(201).json({ success: true, product });
+      res.status(201).json({ success: true, message: 'Sản phẩm đã được tạo thành công' });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -38,11 +43,14 @@ class ProductController {
   static async addProductsBulk(req, res) {
     try {
       const items = Array.isArray(req.body) ? req.body : [];
-      const products = await Promise.all(items.map(async p => ({
-        ...p, embedding: p.embedding || await getEmbeddingFromPython(p.name || ''),
-      })));
-      const created = await Product.bulkCreate(products, { returning: true });
-      res.status(201).json({ success: true, products: created });
+      for (const item of items) {
+        const embedding = item.embedding || await getEmbeddingFromPython(item.name || '');
+        await Product.create({
+          ...item,
+          embedding,
+        });
+      }
+      res.status(201).json({ success: true, message: `${items.length} sản phẩm đã được tạo thành công` });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
@@ -52,11 +60,14 @@ class ProductController {
   static async getProducts(req, res) {
     try {
       const { categoryId } = req.query;
-      const where = categoryId ? { categoryId } : undefined;
-      const products = await Product.findAll({
-        where,
-        include: [{ model: Category, attributes: ['name'] }],
-      });
+      let products;
+      
+      if (categoryId) {
+        products = await Product.getByCategory(categoryId);
+      } else {
+        products = await Product.getAll();
+      }
+      
       res.json({ success: true, products });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -67,9 +78,7 @@ class ProductController {
   static async getProductById(req, res) {
     try {
       const { id } = req.params;
-      const product = await Product.findByPk(id, {
-        include: [{ model: Category, attributes: ['name'] }],
-      });
+      const product = await Product.getById(id);
       if (!product)
         return res.status(404).json({ message: 'Sản phẩm không tồn tại!' });
       res.json({ success: true, product });
@@ -82,18 +91,17 @@ class ProductController {
   static async getProductByCategoryAndId(req, res) {
     try {
       const { category, id } = req.params;
-      const product = await Product.findByPk(id, {
-        include: [{ model: Category, attributes: ['name'] }],
-      });
+      console.log('🔍 Getting product by category and id:', { category, id });
+      
+      const product = await Product.getById(id);
+      console.log('🔍 Product found:', product);
+      
       if (!product)
         return res.status(404).json({ message: 'Sản phẩm không tồn tại!' });
 
-      const categoryName = product.Category?.name;
-      if (categoryName && decodeURIComponent(category) !== categoryName)
-        return res.status(400).json({ message: 'Danh mục không khớp với sản phẩm!' });
-
       res.json({ success: true, product });
     } catch (error) {
+      console.error('❌ Error getting product by category and id:', error);
       res.status(500).json({ success: false, message: error.message });
     }
   }
@@ -104,10 +112,7 @@ class ProductController {
       const { keyword } = req.query;
       if (!keyword)
         return res.status(400).json({ message: 'Từ khoá không được để trống!' });
-      const products = await Product.findAll({
-        where: { name: { [Op.like]: `%${keyword}%` } },
-        include: [{ model: Category, attributes: ['name'] }],
-      });
+      const products = await Product.searchByName(keyword);
       res.json({ success: true, products });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -121,60 +126,24 @@ class ProductController {
       if (!keyword)
         return res.status(400).json({ message: 'Từ khoá không được để trống!' });
 
-      const main = await Product.findAll({
-        where: { name: { [Op.like]: `%${keyword}%` } },
-        include: [{ model: Category, attributes: ['name'] }],
-      });
-
+      const main = await Product.searchByName(keyword);
       const catIds = [...new Set(main.map(p => p.categoryId))];
-      const related = await Product.findAll({
-        where: {
-          categoryId: { [Op.in]: catIds },
-          name: { [Op.notLike]: `%${keyword}%` },
-        },
-        include: [{ model: Category, attributes: ['name'] }],
-      });
+      
+      let related = [];
+      for (const catId of catIds) {
+        const catProducts = await Product.searchByCategory(catId);
+        related = related.concat(catProducts.filter(p => 
+          !p.name.toLowerCase().includes(keyword.toLowerCase())
+        ));
+      }
 
-      const unique = Array.from(new Map([...main, ...related].map(p => [p.id, p])).values());
+      const unique = Array.from(new Map([...main, ...related].map(p => [p.productId, p])).values());
       res.json({ success: true, products: unique });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
     }
   }
 
-  // [GET] /api/products/search-embedding
-  static async searchProductsByEmbedding(req, res) {
-    try {
-      const { keyword } = req.query;
-      if (!keyword)
-        return res.status(400).json({ message: 'Thiếu từ khóa' });
-
-      const queryVec = await getEmbeddingFromPython(keyword);
-      const products = await Product.findAll({
-        include: [{ model: Category, attributes: ['name'] }],
-      });
-
-      const scored = products.map(p => ({
-        product: p,
-        score: cosineSimilarity(queryVec, p.embedding || []),
-      }));
-      scored.sort((a, b) => b.score - a.score);
-
-      res.json({
-        success: true,
-        results: scored.slice(0, 10).map(({ product, score }) => ({
-          id: product.id,
-          name: product.name,
-          image: product.image,
-          prices: product.prices,
-          category: product.Category?.name || '',
-          score,
-        })),
-      });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  }
 
   // [PUT] /api/products/:id
   static async updateProduct(req, res) {
@@ -184,11 +153,11 @@ class ProductController {
       if (data.name)
         data.embedding = await getEmbeddingFromPython(data.name);
 
-      const [count] = await Product.update(data, { where: { id } });
-      if (!count)
+      await Product.update(id, data);
+      const updated = await Product.getById(id);
+      if (!updated)
         return res.status(404).json({ message: 'Sản phẩm không tồn tại!' });
 
-      const updated = await Product.findByPk(id);
       res.json({ success: true, product: updated });
     } catch (error) {
       res.status(500).json({ success: false, message: error.message });
@@ -199,7 +168,7 @@ class ProductController {
   static async deleteProduct(req, res) {
     try {
       const { id } = req.params;
-      const deleted = await Product.destroy({ where: { id } });
+      const deleted = await Product.deleteById(id);
       if (!deleted)
         return res.status(404).json({ message: 'Sản phẩm không tồn tại!' });
 

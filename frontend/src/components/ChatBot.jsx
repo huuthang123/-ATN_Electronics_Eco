@@ -83,7 +83,7 @@ function ChatBot() {
                 if (!productName || productName.trim() === '') {
                     return 'Vui lòng cung cấp tên sản phẩm cụ thể (ví dụ: "Mít sấy").';
                 }
-                const res = await axios.get(`http://localhost:5000/api/products/search-expanded?keyword=${encodeURIComponent(productName)}`, {
+                const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/products/search-expanded?keyword=${encodeURIComponent(productName)}`, {
                     timeout: 5000
                 });
                 if (typeof res.data !== 'object' || res.data === null) {

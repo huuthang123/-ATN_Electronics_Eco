@@ -1,6 +1,9 @@
 import React, { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { apiConfig } from "../config/api";
+import { signIn } from "../services/signinService";
+import { registerUser } from "../services/signupService";
 
 const AuthContext = createContext();
 
@@ -18,7 +21,7 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         console.log("Token từ localStorage:", token);
         try {
-          const response = await axios.get("http://localhost:5000/api/auth/me", {
+          const response = await axios.get(`${apiConfig.baseURL}/api/auth/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
@@ -64,12 +67,12 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       if (!email || !password) throw new Error("Vui lòng nhập email và mật khẩu.");
-      console.log("Đang gửi request login:", { email });
+      console.log("Đang gửi request login:", { email, apiURL: apiConfig.baseURL });
 
-      const response = await axios.post("http://localhost:5000/api/auth/login", { email, password });
-      console.log("Response từ login:", response.data);
+      const response = await signIn(email, password);
+      console.log("Response từ login:", response);
 
-      const { token, user: userData } = response.data;
+      const { token, user: userData } = response;
 
       if (!token || typeof token !== "string" || !userData) {
         throw new Error("Không nhận được token hoặc dữ liệu user từ server");
@@ -79,8 +82,11 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("tempUserId");
 
       setUser({ ...userData, _id: userData.id, token, isGuest: false });
+      console.log("Đăng nhập thành công, chuyển về trang chủ");
+      navigate("/"); // Chuyển về trang chủ sau khi đăng nhập thành công
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Email hoặc mật khẩu không đúng";
+      console.error("Chi tiết lỗi login:", error);
+      const errorMessage = error.message || "Email hoặc mật khẩu không đúng";
       console.error("Lỗi login:", errorMessage);
       throw new Error(errorMessage);
     }
@@ -94,16 +100,10 @@ export const AuthProvider = ({ children }) => {
 
       console.log("Đang gửi request register:", { username, email, phone });
 
-      const response = await axios.post("http://localhost:5000/api/auth/register", {
-        username,
-        email,
-        phone,
-        password,
-      });
+      const response = await registerUser({ username, email, phone, password });
+      console.log("Response từ register:", response);
 
-      console.log("Response từ register:", response.data);
-
-      const { token, user: userData } = response.data;
+      const { token, user: userData } = response;
 
       if (!token || typeof token !== "string" || !userData) {
         throw new Error("Không nhận được token hoặc dữ liệu user từ server");
@@ -113,8 +113,9 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem("tempUserId");
 
       setUser({ ...userData, _id: userData.id, token, isGuest: false });
+      navigate("/"); // Chuyển về trang chủ sau khi đăng ký thành công
     } catch (error) {
-      const errorMessage = error.response?.data?.message || "Đăng ký thất bại";
+      const errorMessage = error.message || "Đăng ký thất bại";
       console.error("Lỗi register:", errorMessage);
       throw new Error(errorMessage);
     }

@@ -1,7 +1,9 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/products';
-const CATEGORY_URL = 'http://localhost:5000/api/categories';
+import { apiConfig } from '../config/api';
+
+const API_URL = `${apiConfig.baseURL}/api/products`;
+const CATEGORY_URL = `${apiConfig.baseURL}/api/categories`;
 
 // ✅ Lấy danh sách sản phẩm theo categoryId
 export const fetchMenuItems = async (categoryId) => {

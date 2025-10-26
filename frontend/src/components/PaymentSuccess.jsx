@@ -75,7 +75,7 @@ const PaymentSuccess = () => {
       if (user?.token) {
         try {
           const existingOrder = await axios.get(
-            `http://localhost:5000/api/orders/by-transaction/${transactionNo}`,
+            `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/orders/by-transaction/${transactionNo}`,
             { headers: { Authorization: `Bearer ${user.token}` } }
           );
           if (existingOrder.data) {

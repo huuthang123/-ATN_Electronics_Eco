@@ -1,14 +1,17 @@
 // src/services/CartService.js
 import axios from 'axios';
 
-const BASE_URL = 'http://localhost:5000/api/carts';
+import { apiConfig } from '../config/api';
+
+const BASE_URL = `${apiConfig.baseURL}/api/carts`;
 
 export async function fetchCart(token) {
   try {
     if (!token) throw new Error('Thiếu token');
-    const response = await axios.get(BASE_URL, {
+    const response = await axios.get(`${apiConfig.baseURL}/api/carts`, {
       headers: { Authorization: `Bearer ${token}` },
     });
+    console.log('Cart response:', response.data);
     return response.data;
   } catch (error) {
     console.error('Error fetching cart:', error.message);
@@ -32,7 +35,7 @@ export async function addToCart(product, token) {
     console.log('Adding to cart:', payload);
 
     const response = await axios.post(
-      BASE_URL,
+      `${apiConfig.baseURL}/api/cart/add`,
       payload,
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -48,8 +51,8 @@ export async function increaseQuantity(productId, attributes, token) {
     if (!token) throw new Error('Thiếu token');
     console.log('Increasing quantity:', { productId, attributes });
 
-    const response = await axios.put(
-      `${BASE_URL}/increase/${productId}`,
+    const response = await axios.post(
+      `${apiConfig.baseURL}/api/cart/increase/${productId}`,
       { attributes }, // Gửi attributes trong body
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -65,8 +68,8 @@ export async function decreaseQuantity(productId, attributes, token) {
     if (!token) throw new Error('Thiếu token');
     console.log('Decreasing quantity:', { productId, attributes });
 
-    const response = await axios.put(
-      `${BASE_URL}/decrease/${productId}`,
+    const response = await axios.post(
+      `${apiConfig.baseURL}/api/cart/decrease/${productId}`,
       { attributes }, // Gửi attributes trong body
       { headers: { Authorization: `Bearer ${token}` } }
     );
@@ -83,7 +86,7 @@ export async function removeFromCart(productId, attributes, token) {
     console.log('Removing from cart:', { productId, attributes });
 
     const response = await axios.delete(
-      `${BASE_URL}/remove/${productId}`,
+      `${apiConfig.baseURL}/api/cart/${productId}`,
       {
         headers: { Authorization: `Bearer ${token}` },
         data: { attributes } // Gửi attributes trong body

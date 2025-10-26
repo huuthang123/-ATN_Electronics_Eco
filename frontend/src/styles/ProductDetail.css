@@ -2,32 +2,40 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: #f5f5f5; /* Nền xám nhạt giống Shopee */
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%);
     min-height: 100vh;
-    padding-top: 80px; /* Thêm padding-top để tránh bị che bởi Header */
+    padding-top: 80px;
     padding: 20px;
     margin-top: 80px;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 .product-content {
-    display: block; /* Thay đổi từ flex thành block để xếp chồng */
+    display: block;
     max-width: 1200px;
     width: 100%;
     padding: 30px;
     margin: 80px auto;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(231, 76, 60, 0.15);
+    border: 2px solid #e74c3c;
 }
 .address-section {
     margin-top: 40px;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+    padding: 25px;
+    border: 2px solid #e74c3c;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    box-shadow: 0 4px 16px rgba(231, 76, 60, 0.1);
 }
 
 .address-section h3 {
     font-size: 24px;
     margin-bottom: 20px;
-    color: #333;
+    color: #e74c3c;
+    font-weight: 700;
+    font-family: 'Space Grotesk', 'Inter', sans-serif;
 }
 
 .selected-address-section {

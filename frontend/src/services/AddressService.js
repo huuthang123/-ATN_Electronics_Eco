@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:5000/api/addresses';
+import { apiConfig } from '../config/api';
+
+const API_URL = `${apiConfig.baseURL}/api/addresses`;
 
 const AddressService = {
   getAddresses: async (token) => {

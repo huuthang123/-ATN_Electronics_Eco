@@ -26,13 +26,23 @@ const EmbeddingSearch = () => {
     debounceRef.current = setTimeout(() => {
       axios
         .get(
-          `http://localhost:5000/api/products/search-embedding?keyword=${encodeURIComponent(
+          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/products/search-embedding?keyword=${encodeURIComponent(
             keyword.trim()
           )}`
         )
         .then((res) => {
-          // Giả sử API trả về { success: true, products: [...] }
-          setProducts(res.data.products || []);
+          // API trả về { success: true, results: [...] }
+          const results = res.data.results || [];
+          // Chuẩn hóa dữ liệu để UI dùng chung format
+          const normalized = results.map((item) => ({
+            _id: item.id,
+            name: item.name,
+            image: item.image,
+            prices: item.prices,
+            categoryName: item.category,
+            score: item.score
+          }));
+          setProducts(normalized);
           setShowDropdown(true);
           setLoading(false);
         })
@@ -76,7 +86,7 @@ const EmbeddingSearch = () => {
                 key={product._id}
                 className="search-item"
                 onClick={() => {
-                  navigate(`/${product.categoryId?.name || "category"}/${product._id}`);
+                  navigate(`/${product.categoryName || "category"}/${product._id}`);
                   setShowDropdown(false);
                 }}
               >
@@ -86,12 +96,20 @@ const EmbeddingSearch = () => {
                   className="search-item-img"
                   loading="lazy"
                 />
-                <span className="name">{product.name}</span>
-                <span className="price">
-                  {product.prices?.["250"]
-                    ? `${product.prices["250"].toLocaleString()}₫`
-                    : "N/A"}
-                </span>
+                <div className="search-item-info">
+                  <span className="name">{product.name}</span>
+                  <span className="category">{product.categoryName}</span>
+                </div>
+                <div className="search-item-price">
+                  <span className="price">
+                    {product.prices?.["250"]
+                      ? `${product.prices["250"].toLocaleString()}₫`
+                      : "N/A"}
+                  </span>
+                  {product.score && (
+                    <span className="score">{(product.score * 100).toFixed(1)}%</span>
+                  )}
+                </div>
               </li>
             ))
           ) : (

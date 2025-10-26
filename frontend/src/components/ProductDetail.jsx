@@ -5,12 +5,13 @@ import ProductItem from './ProductItem';
 import RelatedItems from './RelatedItems';
 import ProductReview from './ProductReview';
 import Footer from './Footer';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import '../styles/ProductDetail.css';
 import CartSidebar from './CartSidebar';
 import ShippingAddressForm from './ShippingAddressForm';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import AddressService from '../services/AddressService';
+import { apiConfig } from '../config/api';
+import '../styles/ProductDetail.css';
 
 const ProductDetail = () => {
   const { id, category } = useParams();
@@ -33,17 +34,17 @@ const ProductDetail = () => {
 
   const fetchProduct = useCallback(async () => {
     try {
-      console.log('Fetching product with id:', id, 'and category:', decodedCategory);
-      const response = await fetch(`http://localhost:5000/api/products/${encodeURIComponent(category)}/${id}`);
+      console.log('🔍 Fetching product with id:', id, 'and category:', decodedCategory);
+      const response = await fetch(`${apiConfig.baseURL}/api/products/${encodeURIComponent(category)}/${id}`);
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const data = await response.json();
-      console.log('Product data:', data);
+      console.log('✅ Product data:', data);
       setProduct({
         ...data.product,
         categoryName: data.product.categoryId?.name || decodedCategory || 'Không xác định',
       });
     } catch (err) {
-      console.error('Error fetching product:', err);
+      console.error('❌ Error fetching product:', err);
       setError(`Không thể tải thông tin sản phẩm: ${err.message}`);
     } finally {
       setLoading(false);
@@ -53,8 +54,8 @@ const ProductDetail = () => {
   const fetchRelatedProducts = useCallback(async () => {
     if (!product) return;
     try {
-      console.log('Fetching related products for categoryId:', product.categoryId?._id);
-      const response = await fetch(`http://localhost:5000/api/products/list`);
+      console.log('🔍 Fetching related products for categoryId:', product.categoryId?._id);
+      const response = await fetch(`${apiConfig.baseURL}/api/products/list`);
       if (!response.ok) throw new Error('Không thể tải sản phẩm liên quan');
       const data = await response.json();
       setRelatedProducts(
@@ -66,7 +67,7 @@ const ProductDetail = () => {
           }))
       );
     } catch (err) {
-      console.error('Error fetching related products:', err);
+      console.error('❌ Error fetching related products:', err);
       setRelatedProducts([]);
     }
   }, [id, product, decodedCategory]);
@@ -75,7 +76,7 @@ const ProductDetail = () => {
     if (!user?.token || isFetchingAddresses) return;
     setIsFetchingAddresses(true);
     try {
-      console.log('Fetching addresses with token:', user.token);
+      console.log('🔍 Fetching addresses with token:', user.token);
       const addresses = await AddressService.getAddresses(user.token);
       setSavedAddresses(addresses);
       if (addresses.length > 0 && !selectedAddress) {
@@ -88,7 +89,7 @@ const ProductDetail = () => {
         });
       }
     } catch (err) {
-      console.error('Error fetching addresses:', err);
+      console.error('❌ Error fetching addresses:', err);
       setError('Không thể tải danh sách địa chỉ. Vui lòng thử lại sau.');
       setSavedAddresses([]);
       setSelectedAddress(null);

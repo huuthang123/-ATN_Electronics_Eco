@@ -10,6 +10,11 @@ async function create({ userId, fullName, phone, province, district, ward, detai
     INSERT INTO Address (userId, fullName, phone, province, district, ward, detail, createdAt, updatedAt)
     VALUES (${userId}, ${fullName}, ${phone}, ${province}, ${district}, ${ward}, ${detail}, GETDATE(), GETDATE())
   `;
+  // Return the latest inserted address for this user
+  const r = await sql.query`
+    SELECT TOP 1 * FROM Address WHERE userId = ${userId} ORDER BY createdAt DESC
+  `;
+  return r.recordset[0];
 }
 
 async function update(addressId, data) {
@@ -22,4 +27,10 @@ async function update(addressId, data) {
   `;
 }
 
-module.exports = { getByUser, create, update };
+async function remove(addressId, userId) {
+  await sql.query`
+    DELETE FROM Address WHERE addressId=${addressId} AND userId=${userId}
+  `;
+}
+
+module.exports = { getByUser, create, update, remove };

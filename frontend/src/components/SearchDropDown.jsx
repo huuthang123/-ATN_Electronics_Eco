@@ -15,7 +15,7 @@ const SearchDropdown = () => {
     const delayDebounce = setTimeout(() => {
       if (keyword.trim()) {
         axios
-          .get(`http://localhost:5000/api/products/search?keyword=${keyword}`)
+          .get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/products/search?keyword=${keyword}`)
           .then((res) => {
             console.log("✅ Kết quả:", res.data);
             setResults(res.data);
@@ -66,7 +66,14 @@ const SearchDropdown = () => {
                   setShowDropdown(false);
                 }}
               >
-                <img src={product.image} alt={product.name} />
+                <img 
+                  src={product.image} 
+                  alt={product.name}
+                  onError={(e) => {
+                    e.target.src = '/placeholder.png';
+                    e.target.onerror = null;
+                  }}
+                />
                 <span className="name">{product.name}</span>
                 <span className="price">
                   {product.prices?.["250"]
