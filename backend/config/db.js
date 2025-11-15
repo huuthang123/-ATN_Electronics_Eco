@@ -3,9 +3,9 @@ const sql = require('mssql');
 const config = {
   user: process.env.DB_USER || 'sa',
   password: process.env.DB_PASSWORD || 'Thang@123',
-  server: process.env.DB_SERVER || 'localhost',
+  server: process.env.DB_SERVER || 'DESKTOP-RJSRD5P',
   port: parseInt(process.env.DB_PORT) || 1433,
-  database: process.env.DB_NAME || 'EcommerceDB',
+  database: process.env.DB_NAME || 'EcommerceDB_V3_1',
   options: {
     encrypt: true,
     trustServerCertificate: true
@@ -21,4 +21,4 @@ const connectDB = async () => {
   }
 };
 
-module.exports = { connectDB, sql };
+module.exports = { connectDB, sql, config };  // ⭐ EXPORT CONFIG LUÔN

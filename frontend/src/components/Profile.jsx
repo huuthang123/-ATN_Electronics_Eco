@@ -3,11 +3,15 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { apiConfig } from '../config/api';
 import '../styles/Profile.css';
+
+const BASE_URL = apiConfig?.baseURL || process.env.REACT_APP_API_URL || 'http://localhost:5000';
 
 const Profile = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [oldPassword, setOldPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -35,28 +39,57 @@ const Profile = () => {
     const fetchOrders = async () => {
       if (!user?.token) return;
       try {
-        const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/orders/my-orders`, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
+        const response = await axios.get(
+          `${BASE_URL}/api/orders/my-orders`,
+          {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }
+        );
 
+        // backend mới có thể trả {orders: [...] } hoặc [] trực tiếp
+        const raw = response.data.orders || response.data;
+        const list = Array.isArray(raw) ? raw : [];
+
+        // Dùng orderId (SQL) hoặc id/_id fallback
         const uniqueOrders = Array.from(
-          new Map(response.data.map(order => [order._id, order])).values()
+          new Map(
+            list.map((order) => [
+              order.orderId || order.id || order._id,
+              order,
+            ])
+          ).values()
         );
 
-        const categoryPromises = uniqueOrders.flatMap(order =>
-          order.products.map(async (item) => {
+        // Nếu cần category slug cho link, vẫn giữ logic cũ nhưng dùng productId số
+        const categoryPromises = uniqueOrders.flatMap((order) => {
+          const items = order.items || order.products || [];
+          return items.map(async (item) => {
+            const rawProductId =
+              item.productId?.productId ||
+              item.productId?.id ||
+              item.productId?._id ||
+              item.productId;
+
+            if (!rawProductId) return { productId: null, category: 'unknown' };
+
             try {
-              const productResponse = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/products/${item.productId._id}`);
-              return { productId: item.productId._id, category: productResponse.data.category };
+              const productResponse = await axios.get(
+                `${BASE_URL}/api/products/${rawProductId}`
+              );
+              const pd = productResponse.data.product || productResponse.data;
+              return {
+                productId: rawProductId,
+                category: pd.categoryName || pd.category || 'unknown',
+              };
             } catch (error) {
-              return { productId: item.productId._id, category: 'unknown' };
+              return { productId: rawProductId, category: 'unknown' };
             }
-          })
-        );
+          });
+        });
 
         const categories = await Promise.all(categoryPromises);
         const categoryMap = categories.reduce((acc, { productId, category }) => {
-          acc[productId] = category;
+          if (productId != null) acc[productId] = category;
           return acc;
         }, {});
         setProductCategories(categoryMap);
@@ -66,7 +99,7 @@ const Profile = () => {
         console.error('Lỗi khi lấy đơn hàng:', error.response?.data || error.message);
         if (error.response?.status === 401) {
           logout();
-          navigate("/sign-in");
+          navigate('/sign-in');
         }
       }
     };
@@ -76,23 +109,32 @@ const Profile = () => {
 
   const fetchExistingReview = async (orderId, productId) => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/reviews/order/${orderId}/product/${productId}`, {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
+      const { data } = await axios.get(
+        `${BASE_URL}/api/reviews/order/${orderId}/product/${productId}`,
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        }
+      );
 
-      const reviewData = response.data;
+      const reviewData = data.review || data;
       setRating((prev) => ({ ...prev, [productId]: reviewData.rating }));
       setReview((prev) => ({ ...prev, [productId]: reviewData.comment }));
-      setExistingReviews((prev) => ({ ...prev, [`${orderId}_${productId}`]: true }));
+      setExistingReviews((prev) => ({
+        ...prev,
+        [`${orderId}_${productId}`]: true,
+      }));
     } catch (error) {
-      setExistingReviews((prev) => ({ ...prev, [`${orderId}_${productId}`]: false }));
+      setExistingReviews((prev) => ({
+        ...prev,
+        [`${orderId}_${productId}`]: false,
+      }));
     }
   };
 
   const handleSubmitReview = async (orderId, productId) => {
     try {
       await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/reviews`,
+        `${BASE_URL}/api/reviews`,
         {
           orderId,
           productId,
@@ -104,21 +146,24 @@ const Profile = () => {
         }
       );
 
-      toast.success("Đánh giá đã được gửi!", {
-        position: "top-right",
+      toast.success('Đánh giá đã được gửi!', {
+        position: 'top-right',
         autoClose: 3000,
       });
 
-      setExistingReviews((prev) => ({ ...prev, [`${orderId}_${productId}`]: true }));
+      setExistingReviews((prev) => ({
+        ...prev,
+        [`${orderId}_${productId}`]: true,
+      }));
       setIsEditing((prev) => ({ ...prev, [productId]: false }));
     } catch (error) {
       console.error('Lỗi khi gửi đánh giá:', error.response?.data || error.message);
       if (error.response?.status === 401) {
         logout();
-        navigate("/sign-in");
+        navigate('/sign-in');
       } else {
         toast.error(error.response?.data?.message || 'Lỗi khi gửi đánh giá', {
-          position: "top-right",
+          position: 'top-right',
           autoClose: 3000,
         });
       }
@@ -129,7 +174,7 @@ const Profile = () => {
     e.preventDefault();
     try {
       const response = await axios.put(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/users/change-password`,
+        `${BASE_URL}/api/users/change-password`,
         { oldPassword, newPassword },
         { headers: { Authorization: `Bearer ${user.token}` } }
       );
@@ -146,20 +191,27 @@ const Profile = () => {
       toast.error(error.response?.data?.message || 'Lỗi khi đổi mật khẩu');
       if (error.response?.status === 401) {
         logout();
-        navigate("/sign-in");
+        navigate('/sign-in');
       }
     }
   };
 
   const maskEmail = (email) => {
+    if (!email) return '';
     const [name, domain] = email.split('@');
     return `${name.substring(0, 2)}****@${domain}`;
   };
 
   const getUniqueProducts = (products) => {
+    const items = products || [];
     const uniqueProductsMap = new Map();
-    products.forEach((item) => {
-      const key = item.productId._id;
+    items.forEach((item) => {
+      const key =
+        item.productId?.productId ||
+        item.productId?.id ||
+        item.productId?._id ||
+        item.productId;
+      if (!key) return;
       if (!uniqueProductsMap.has(key)) {
         uniqueProductsMap.set(key, item);
       }
@@ -178,15 +230,42 @@ const Profile = () => {
         <h2>Thông tin cá nhân</h2>
         <div className="email-section">
           <p>Email: {user?.email ? maskEmail(user.email) : 'Chưa đăng nhập'}</p>
-          <button className="change-password-btn" onClick={() => setShowPasswordForm(!showPasswordForm)}>Đổi mật khẩu</button>
+          <button
+            className="change-password-btn"
+            onClick={() => setShowPasswordForm((prev) => !prev)}
+          >
+            Đổi mật khẩu
+          </button>
         </div>
         {showPasswordForm && (
           <form onSubmit={handlePasswordChange} className="password-form">
             <h3>Đổi mật khẩu</h3>
-            <input type="password" value={oldPassword} onChange={(e) => setOldPassword(e.target.value)} placeholder="Mật khẩu cũ" className="password-input" required />
-            <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Mật khẩu mới" className="password-input" required />
-            <button type="submit" className="update-btn">Cập nhật</button>
-            <button type="button" className="cancel-btn" onClick={() => setShowPasswordForm(false)}>Hủy</button>
+            <input
+              type="password"
+              value={oldPassword}
+              onChange={(e) => setOldPassword(e.target.value)}
+              placeholder="Mật khẩu cũ"
+              className="password-input"
+              required
+            />
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Mật khẩu mới"
+              className="password-input"
+              required
+            />
+            <button type="submit" className="update-btn">
+              Cập nhật
+            </button>
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={() => setShowPasswordForm(false)}
+            >
+              Hủy
+            </button>
           </form>
         )}
       </div>
@@ -197,7 +276,6 @@ const Profile = () => {
           <table className="order-table">
             <thead>
               <tr>
-                
                 <th>Ngày đặt</th>
                 <th>Trạng thái</th>
                 <th>Tổng tiền</th>
@@ -205,20 +283,43 @@ const Profile = () => {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
-                <tr key={order._id} onClick={() => {
-                  setSelectedOrder(order);
-                  getUniqueProducts(order.products).forEach((item) =>
-                    fetchExistingReview(order._id, item.productId._id)
-                  );
-                }} className="order-row">
-                 
-                  <td>{new Date(order.createdAt).toLocaleDateString('vi-VN')}</td>
-                  <td>{mapOrderStatus(order.status)}</td>
-                  <td>{order.totalPrice.toLocaleString('vi-VN')} VND</td>
-                  <td><button className="view-details-btn">Xem</button></td>
-                </tr>
-              ))}
+              {orders.map((order) => {
+                const orderKey = order.orderId || order.id || order._id;
+                const status = order.status || order.orderStatus;
+                return (
+                  <tr
+                    key={orderKey}
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      const products = getUniqueProducts(order.items || order.products || []);
+                      products.forEach((item) => {
+                        const pid =
+                          item.productId?.productId ||
+                          item.productId?.id ||
+                          item.productId?._id ||
+                          item.productId;
+                        if (pid) {
+                          fetchExistingReview(orderKey, pid);
+                        }
+                      });
+                    }}
+                    className="order-row"
+                  >
+                    <td>
+                      {order.createdAt
+                        ? new Date(order.createdAt).toLocaleDateString('vi-VN')
+                        : ''}
+                    </td>
+                    <td>{mapOrderStatus(status)}</td>
+                    <td>
+                      {(order.totalPrice || 0).toLocaleString('vi-VN')} VND
+                    </td>
+                    <td>
+                      <button className="view-details-btn">Xem</button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         ) : (
@@ -228,11 +329,31 @@ const Profile = () => {
 
       {selectedOrder && (
         <div className="order-details">
-          <h3>Chi tiết đơn hàng {selectedOrder._id}</h3>
+          <h3>
+            Chi tiết đơn hàng{' '}
+            {selectedOrder.orderId || selectedOrder.id || selectedOrder._id}
+          </h3>
           <div className="order-info">
-            <p><strong>Trạng thái:</strong> {mapOrderStatus(selectedOrder.status)}</p>
-            <p><strong>Địa chỉ:</strong> {selectedOrder.address.fullName}, {selectedOrder.address.address}</p>
-            <p><strong>Số điện thoại:</strong> {selectedOrder.address.phone}</p>
+            <p>
+              <strong>Trạng thái:</strong>{' '}
+              {mapOrderStatus(
+                selectedOrder.status || selectedOrder.orderStatus
+              )}
+            </p>
+            {selectedOrder.address && (
+              <>
+                <p>
+                  <strong>Địa chỉ:</strong>{' '}
+                  {selectedOrder.address.fullName},{' '}
+                  {selectedOrder.address.address ||
+                    `${selectedOrder.address.detail}, ${selectedOrder.address.ward}, ${selectedOrder.address.district}, ${selectedOrder.address.province}`}
+                </p>
+                <p>
+                  <strong>Số điện thoại:</strong>{' '}
+                  {selectedOrder.address.phone}
+                </p>
+              </>
+            )}
           </div>
           <div className="products-list">
             <h4>Sản phẩm trong đơn hàng</h4>
@@ -244,48 +365,99 @@ const Profile = () => {
                   <th>Số lượng</th>
                   <th>Giá</th>
                   <th>Kích thước</th>
-                  {selectedOrder.status === 'Delivered' && <th>Đánh giá</th>}
+                  {(selectedOrder.status || selectedOrder.orderStatus) ===
+                    'Delivered' && <th>Đánh giá</th>}
                 </tr>
               </thead>
               <tbody>
-                {getUniqueProducts(selectedOrder.products).map((item) => {
-                  const key = `${selectedOrder._id}_${item.productId._id}`;
+                {getUniqueProducts(
+                  selectedOrder.items || selectedOrder.products || []
+                ).map((item) => {
+                  const pid =
+                    item.productId?.productId ||
+                    item.productId?.id ||
+                    item.productId?._id ||
+                    item.productId;
+                  const key =
+                    `${selectedOrder.orderId || selectedOrder.id || selectedOrder._id}_${pid}`;
                   const hasReview = existingReviews[key];
+                  const categorySlug =
+                    productCategories[pid] || 'product';
+
+                  const productName =
+                    item.productName || item.productId?.name || 'Sản phẩm';
+                  const productImage =
+                    item.productImage || item.productId?.image;
 
                   return (
-                    <tr key={item.productId._id} className="product-row">
+                    <tr key={pid} className="product-row">
                       <td>
-                        <Link to={`/${productCategories[item.productId._id] || 'unknown'}/${item.productId._id}`} className="product-link">
-                          <img src={item.productId.image} alt={item.productId.name} className="product-image" />
+                        <Link
+                          to={`/product/${categorySlug}/${pid}`}
+                          className="product-link"
+                        >
+                          <img
+                            src={productImage}
+                            alt={productName}
+                            className="product-image"
+                          />
                         </Link>
                       </td>
                       <td>
-                        <Link to={`/${productCategories[item.productId._id] || 'unknown'}/${item.productId._id}`} className="product-link">
-                          {item.productId.name}
+                        <Link
+                          to={`/product/${categorySlug}/${pid}`}
+                          className="product-link"
+                        >
+                          {productName}
                         </Link>
                       </td>
                       <td>{item.quantity}</td>
-                      <td>{item.price.toLocaleString('vi-VN')} VND</td>
+                      <td>
+                        {(item.price || item.unitPrice || 0).toLocaleString(
+                          'vi-VN'
+                        )}{' '}
+                        VND
+                      </td>
                       <td>{formatSizeToKg(item.size)}</td>
-                      {selectedOrder.status === 'Delivered' && (
+                      {(selectedOrder.status || selectedOrder.orderStatus) ===
+                        'Delivered' && (
                         <td>
-                          <div className={`review-section ${hasReview ? 'reviewed' : 'pending-review'}`}>
-                            {hasReview && !isEditing[item.productId._id] ? (
+                          <div
+                            className={`review-section ${
+                              hasReview ? 'reviewed' : 'pending-review'
+                            }`}
+                          >
+                            {hasReview && !isEditing[pid] ? (
                               <div className="review-display">
-                                <p className="review-status">Đã đánh giá <span className="check-icon">✓</span></p>
+                                <p className="review-status">
+                                  Đã đánh giá{' '}
+                                  <span className="check-icon">✓</span>
+                                </p>
                                 <div className="rating-display">
                                   {[...Array(5)].map((_, index) => (
                                     <span
                                       key={index}
-                                      className={index < (rating[item.productId._id] || 0) ? 'star-filled' : 'star-empty'}
+                                      className={
+                                        index <
+                                        (rating[pid] ? rating[pid] : 0)
+                                          ? 'star-filled'
+                                          : 'star-empty'
+                                      }
                                     >
                                       ★
                                     </span>
                                   ))}
                                 </div>
-                                <p className="review-comment">{review[item.productId._id] || 'Không có nhận xét'}</p>
+                                <p className="review-comment">
+                                  {review[pid] || 'Không có nhận xét'}
+                                </p>
                                 <button
-                                  onClick={() => setIsEditing((prev) => ({ ...prev, [item.productId._id]: true }))}
+                                  onClick={() =>
+                                    setIsEditing((prev) => ({
+                                      ...prev,
+                                      [pid]: true,
+                                    }))
+                                  }
                                   className="edit-review-btn"
                                 >
                                   Sửa đánh giá
@@ -293,26 +465,49 @@ const Profile = () => {
                               </div>
                             ) : (
                               <>
-                                <p className="review-status">{hasReview ? 'Sửa đánh giá' : 'Viết đánh giá'}</p>
+                                <p className="review-status">
+                                  {hasReview ? 'Sửa đánh giá' : 'Viết đánh giá'}
+                                </p>
                                 <div className="rating">
                                   {[1, 2, 3, 4, 5].map((star) => (
                                     <span
                                       key={star}
-                                      onClick={() => setRating((prev) => ({ ...prev, [item.productId._id]: star }))}
-                                      className={star <= (rating[item.productId._id] || 0) ? 'star-filled' : 'star-empty'}
+                                      onClick={() =>
+                                        setRating((prev) => ({
+                                          ...prev,
+                                          [pid]: star,
+                                        }))
+                                      }
+                                      className={
+                                        star <= (rating[pid] || 0)
+                                          ? 'star-filled'
+                                          : 'star-empty'
+                                      }
                                     >
                                       ★
                                     </span>
                                   ))}
                                 </div>
                                 <textarea
-                                  value={review[item.productId._id] || ''}
-                                  onChange={(e) => setReview((prev) => ({ ...prev, [item.productId._id]: e.target.value }))}
+                                  value={review[pid] || ''}
+                                  onChange={(e) =>
+                                    setReview((prev) => ({
+                                      ...prev,
+                                      [pid]: e.target.value,
+                                    }))
+                                  }
                                   placeholder="Viết nhận xét của bạn..."
                                   className="review-textarea"
                                 />
                                 <button
-                                  onClick={() => handleSubmitReview(selectedOrder._id, item.productId._id)}
+                                  onClick={() =>
+                                    handleSubmitReview(
+                                      selectedOrder.orderId ||
+                                        selectedOrder.id ||
+                                        selectedOrder._id,
+                                      pid
+                                    )
+                                  }
                                   className="submit-review-btn"
                                 >
                                   {hasReview ? 'Cập nhật' : 'Gửi'}

@@ -1,184 +1,218 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/ProductItem.css';
 
 const ProductItem = ({ product, addToCart, selectedAddress, categoryName }) => {
-  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedPriceId, setSelectedPriceId] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
   const [quantity, setQuantity] = useState(1);
   const [error, setError] = useState(null);
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // Lấy tất cả các kích thước từ prices (hỗ trợ cả Map và Object)
-  const getAvailableSizes = () => {
-    if (!product?.prices) return [];
-    if (product.prices instanceof Map) {
-      return Array.from(product.prices.keys());
+  /* ================== PRICE OPTIONS ================== */
+  const priceOptions = useMemo(() => {
+    return Array.isArray(product?.productPrices) ? product.productPrices : [];
+  }, [product]);
+
+  /* ================== COLOR OPTIONS ================== */
+  const colorOptions = useMemo(() => {
+    if (!product?.productImages) return [];
+    const colors = product.productImages.map((img) => img.color || "Không màu");
+    return [...new Set(colors)];
+  }, [product]);
+
+  const imagesByColor = useMemo(() => {
+    const map = {};
+    if (Array.isArray(product?.productImages)) {
+      product.productImages.forEach((img) => {
+        const color = img.color || "Không màu";
+        if (!map[color]) map[color] = [];
+        map[color].push(img);
+      });
     }
-    return Object.keys(product.prices);
-  };
+    return map;
+  }, [product]);
 
-  const availableSizes = getAvailableSizes();
+  const selectedImage =
+    imagesByColor[selectedColor]?.[0]?.imageUrl ||
+    product?.productImages?.[0]?.imageUrl ||
+    product?.image;
 
+  const selectedPriceOption = priceOptions.find(
+    (p) => Number(p.priceId) === Number(selectedPriceId)
+  );
+
+  const currentPrice = selectedPriceOption
+    ? Number(selectedPriceOption.optionPrice)
+    : 0;
+
+  const optionLabel = selectedPriceOption?.optionName || "";
+
+  /* ================== DEFAULT SELECT ================== */
   useEffect(() => {
-    if (!selectedSize && availableSizes.length > 0) {
-      setSelectedSize(availableSizes[0]);
+    if (!selectedPriceId && priceOptions.length > 0) {
+      setSelectedPriceId(priceOptions[0].priceId);
     }
-  }, [availableSizes, selectedSize]);
+    if (!selectedColor && colorOptions.length > 0) {
+      setSelectedColor(colorOptions[0]);
+    }
+  }, [priceOptions, colorOptions]);
 
-  const getPrice = (size) => {
-    if (!product?.prices) {
-      console.error('❌ No prices available for product:', product?.name);
-      return undefined;
-    }
-    if (product.prices instanceof Map) {
-      return product.prices.get(size);
-    }
-    return product.prices[size];
-  };
+  const productId = product?.productId;
 
+  /* ================== ADD TO CART ================== */
   const handleAddToCart = () => {
-    if (!availableSizes.includes(selectedSize)) {
-      setError(`Vui lòng chọn kích thước hợp lệ (${availableSizes.join(', ')}).`);
-      return;
-    }
-    const price = getPrice(selectedSize);
-    if (price === undefined) {
-      setError("Giá sản phẩm chưa được cập nhật. Vui lòng thử lại sau.");
-      return;
-    }
+    if (!productId) return setError("Không xác định được sản phẩm.");
+    if (currentPrice <= 0) return setError("Giá chưa được cập nhật.");
 
-    const cartItem = {
-      productId: product._id,
+    const item = {
+      productId,
       name: product.name,
-      price,
-      image: product.image,
-      attributes: { size: selectedSize },
-      categoryName: categoryName || 'Không xác định',
-      quantity
+      price: currentPrice,
+      image: selectedImage,
+      categoryName: categoryName || "Không xác định",
+      quantity,
+      attributes: {
+        option: optionLabel,
+        color: selectedColor
+      }
     };
-    console.log('🛒 Adding to cart:', cartItem);
 
-    addToCart(cartItem);
+    addToCart(item);
     setError(null);
   };
 
+  /* ================== BUY NOW ================== */
   const handleBuyNow = () => {
-    if (!user?.token) {
-      navigate('/sign-in');
-      return;
-    }
-    if (!availableSizes.includes(selectedSize)) {
-      setError(`Vui lòng chọn kích thước hợp lệ (${availableSizes.join(', ')}).`);
-      return;
-    }
-    const price = getPrice(selectedSize);
-    if (price === undefined) {
-      setError("Giá sản phẩm chưa được cập nhật. Vui lòng thử lại sau.");
-      return;
-    }
+    if (!user?.token) return navigate("/sign-in");
 
-    const totalAmount = price * quantity;
     const item = {
-      productId: product._id,
+      productId,
       name: product.name,
-      price,
-      image: product.image,
-      attributes: { size: selectedSize },
-      categoryName: categoryName || 'Không xác định',
+      price: currentPrice,
+      image: selectedImage,
       quantity,
-      selected: true
+      selected: true,
+      categoryName,
+      attributes: {
+        option: optionLabel,
+        color: selectedColor
+      }
     };
 
-    console.log('💳 Navigating to payment with item:', item);
-
-    navigate('/payment', {
+    navigate("/payment", {
       state: {
         selectedItems: [item],
-        total: totalAmount,
+        total: currentPrice * quantity,
         selectedAddress
       }
     });
-    setError(null);
   };
 
-  const currentPrice = getPrice(selectedSize);
-  const originalPrice = currentPrice ? currentPrice / (1 - 0.17) : null;
+  /* ===================================================== */
+  /* ===================== RENDER ======================== */
+  /* ===================================================== */
 
   return (
     <div className="product-item">
-      {!product ? (
-        <div>Không có dữ liệu sản phẩm.</div>
-      ) : (
-        <>
-          <div className="product-image-container">
-            <img 
-              src={product.image} 
-              alt={product.name} 
-              className="product-image"
-              onError={(e) => {
-                e.target.src = '/placeholder.png';
-                e.target.onerror = null;
-              }}
-            />
-          </div>
-          <div className="product-info">
-            <h2 className="product-name">{product.name}</h2>
-            <p className="product-description">{product.description || "Không có mô tả"}</p>
-            <p className="product-category">
-              Phân loại: {categoryName || "Đang cập nhật"}
-            </p>
-            <div className="product-meta">
-              <span className="product-rating">
-                ⭐ {product.rating || 0} ({product.sold || 0} lượt bán)
-              </span>
-            </div>
-            {error && <p className="error-message">{error}</p>}
-            <div className="product-price">
-              {originalPrice && (
-                <span className="original-price">
-                  {Math.round(originalPrice).toLocaleString()} VND
-                </span>
-              )}
-              <span className="current-price">
-                {currentPrice !== undefined ? `${currentPrice.toLocaleString()} VND` : "Giá chưa cập nhật"} / {selectedSize || 'N/A'}
-              </span>
-            </div>
-            <div className="product-options">
-              <label>Chọn kích thước: </label>
-              <div className="weight-options">
-                {availableSizes.map((size) => (
-                  <button
-                    key={size}
-                    className={`weight-option ${selectedSize === size ? 'selected' : ''}`}
-                    onClick={() => setSelectedSize(size)}
-                    disabled={getPrice(size) === undefined}
-                  >
-                    {size} 
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div className="product-quantity">
-              <label>Số lượng: </label>
-              <div className="quantity-controls">
-                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
-                <input type="text" value={quantity} readOnly />
-                <button onClick={() => setQuantity(quantity + 1)}>+</button>
-              </div>
-            </div>
-            <div className="product-actions">
-              <button onClick={handleAddToCart} className="btn-add" disabled={currentPrice === undefined}>
-                Thêm vào giỏ hàng
-              </button>
-              <button onClick={handleBuyNow} className="btn-buy" disabled={currentPrice === undefined}>
-                Mua ngay
-              </button>
+
+      {/* -------------- TOP: IMAGE + PANEL --------------- */}
+      <div className="product-top">
+
+        {/* LEFT IMAGE */}
+        <div className="product-left">
+          <img src={selectedImage} alt={product.name} className="product-image" />
+        </div>
+
+        {/* RIGHT PANEL */}
+        <div className="product-right">
+          <h2 className="product-name">{product.name}</h2>
+          <p className="product-category">Phân loại: {categoryName}</p>
+
+          {error && <p className="error-message">{error}</p>}
+
+          {/*  OPTION PRICE  */}
+          <div className="option-block">
+            <label>Chọn loại sản phẩm:</label>
+
+            <div className="option-grid">
+              {priceOptions.map((opt) => (
+                <button
+                  key={opt.priceId}
+                  className={`option-btn ${selectedPriceId === opt.priceId ? "active" : ""}`}
+                  onClick={() => setSelectedPriceId(opt.priceId)}
+                >
+                  {opt.optionName}
+                </button>
+              ))}
             </div>
           </div>
-        </>
-      )}
+
+          {/* COLOR */}
+          <div className="option-block">
+            <label>Chọn màu:</label>
+
+            <div className="option-grid">
+              {colorOptions.map((color) => (
+                <button
+                  key={color}
+                  className={`option-btn ${selectedColor === color ? "active" : ""}`}
+                  onClick={() => setSelectedColor(color)}
+                >
+                  {color}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* QUANTITY */}
+          <div className="option-block">
+            <label>Số lượng:</label>
+
+            <div className="quantity-wrapper">
+              <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>-</button>
+              <input value={quantity} readOnly />
+              <button onClick={() => setQuantity(quantity + 1)}>+</button>
+            </div>
+          </div>
+
+          {/* BUTTONS */}
+          <div className="product-actions">
+            <button
+              onClick={handleAddToCart}
+              className="btn-add"
+              disabled={currentPrice <= 0}
+            >
+              Thêm vào giỏ
+            </button>
+
+            <button
+              onClick={handleBuyNow}
+              className="btn-buy"
+              disabled={currentPrice <= 0}
+            >
+              Mua ngay
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* -------------- PRICE + DESCRIPTION ------------------- */}
+      <div className="product-bottom">
+        <h3 className="price-text">
+          {currentPrice > 0
+            ? `${currentPrice.toLocaleString()} VND / ${optionLabel}`
+            : "Giá chưa cập nhật"}
+        </h3>
+
+        <div className="product-description">
+          <h3>Mô tả sản phẩm</h3>
+          <p>{product.description || "Không có mô tả."}</p>
+        </div>
+      </div>
     </div>
   );
 };

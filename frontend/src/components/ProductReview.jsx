@@ -1,131 +1,248 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import '../styles/ProductReview.css';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import '../styles/ProductItem.css';
 
-const ProductReview = ({ productId }) => {
-  const [summary, setSummary] = useState('');
-  const [reviews, setReviews] = useState([]);
-  const [averageRating, setAverageRating] = useState(0);
-  const [totalReviews, setTotalReviews] = useState(0);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [usernames, setUsernames] = useState({});
+const ProductItem = ({ product, addToCart, selectedAddress, categoryName }) => {
+  const [selectedPriceId, setSelectedPriceId] = useState(null);
+  const [selectedColor, setSelectedColor] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [error, setError] = useState(null);
 
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // ============================
+  // PRODUCT PRICE OPTIONS (ProductPrice)
+  // ============================
+  const priceOptions = useMemo(() => {
+    return Array.isArray(product?.productPrices) ? product.productPrices : [];
+  }, [product]);
+
+  // ============================
+  // PRODUCT COLORS (ProductImage)
+  // ============================
+  const colorOptions = useMemo(() => {
+    if (!product?.productImages) return [];
+
+    const colors = product.productImages.map(
+      (img) => img.color || "Không màu"
+    );
+
+    return [...new Set(colors)];
+  }, [product]);
+
+  // Group ảnh theo màu
+  const imagesByColor = useMemo(() => {
+    const map = {};
+    if (Array.isArray(product?.productImages)) {
+      product.productImages.forEach((img) => {
+        const c = img.color || "Không màu";
+        if (!map[c]) map[c] = [];
+        map[c].push(img);
+      });
+    }
+    return map;
+  }, [product]);
+
+  // Ảnh hiển thị theo màu chọn
+  const selectedImage =
+    imagesByColor[selectedColor]?.[0]?.imageUrl ||
+    product?.productImages?.[0]?.imageUrl ||
+    product?.image;
+
+  // ============================
+  // GET CURRENT PRICE (MAP BY priceId)
+  // ============================
+  const selectedPriceOption = priceOptions.find(
+    (p) => Number(p.priceId) === Number(selectedPriceId)
+  );
+
+  const currentPrice = selectedPriceOption
+    ? Number(selectedPriceOption.optionPrice)
+    : 0;
+
+  const optionLabel = selectedPriceOption?.optionName || "";
+  const productId = product?.productId;
+
+  // ============================
+  // DEFAULT INITIAL VALUES
+  // ============================
   useEffect(() => {
-    if (!productId) return;
+    if (!selectedPriceId && priceOptions.length > 0) {
+      setSelectedPriceId(Number(priceOptions[0].priceId));
+    }
+    if (!selectedColor && colorOptions.length > 0) {
+      setSelectedColor(colorOptions[0]);
+    }
+  }, [priceOptions, colorOptions]);
 
-    const fetchData = async () => {
-      try {
-        // 1. Get summary
-        const { data: summaryData } = await axios.get(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/summaries/${productId}`
-        );
-        setSummary(summaryData.summary || '');
+  // ============================
+  // ADD TO CART
+  // ============================
+  const handleAddToCart = () => {
+    if (!productId) return setError("Không xác định được sản phẩm.");
+    if (currentPrice <= 0) return setError("Chưa có giá cho sản phẩm này.");
 
-        // 2. Get reviews
-        const { data: reviewsData } = await axios.get(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/reviews/product/${productId}`
-        );
-        setReviews(reviewsData);
-
-        // 3. Map userId -> username
-        const usernameResults = await Promise.all(
-          reviewsData.map(async (review) => {
-            const rawUserId = review.userId?._id || review.userId;
-            try {
-              const { data } = await axios.get(
-                `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/users/username/${rawUserId}`
-              );
-              return {
-                userId: rawUserId,
-                username: data.username || 'Anonymous'
-              };
-            } catch {
-              return { userId: rawUserId, username: 'Anonymous' };
-            }
-          })
-        );
-        const usernameMap = Object.fromEntries(
-          usernameResults.map(({ userId, username }) => [userId, username])
-        );
-        setUsernames(usernameMap);
-
-        // 4. Get average rating
-        const { data: avgData } = await axios.get(
-          `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/reviews/average/${productId}`
-        );
-        setAverageRating(avgData.averageRating || 0);
-        setTotalReviews(avgData.totalReviews || 0);
-      } catch (err) {
-        console.error('Error loading review data:', err);
-      }
+    const cartItem = {
+      productId,
+      name: product.name,
+      price: currentPrice,
+      image: selectedImage,
+      quantity,
+      categoryName: categoryName || "Không xác định",
+      attributes: {
+        option: optionLabel,
+        color: selectedColor,
+      },
     };
 
-    fetchData();
-  }, [productId]);
+    addToCart(cartItem);
+    setError(null);
+  };
 
-  const toggleExpand = () => setIsExpanded(!isExpanded);
+  // ============================
+  // BUY NOW
+  // ============================
+  const handleBuyNow = () => {
+    if (!user?.token) return navigate("/sign-in");
+
+    const item = {
+      productId,
+      name: product.name,
+      price: currentPrice,
+      image: selectedImage,
+      quantity,
+      selected: true,
+      categoryName,
+      attributes: {
+        option: optionLabel,
+        color: selectedColor,
+      },
+    };
+
+    navigate("/payment", {
+      state: {
+        selectedItems: [item],
+        total: currentPrice * quantity,
+        selectedAddress,
+      },
+    });
+  };
 
   return (
-    <div className="product-review-container">
-      <h3>Đánh giá sản phẩm</h3>
+    <div className="product-item">
+      {!product ? (
+        <div>Không có dữ liệu sản phẩm.</div>
+      ) : (
+        <>
+          {/* IMAGE */}
+          <div className="product-image-container">
+            <img
+              src={selectedImage}
+              alt={product.name}
+              className="product-image"
+              onError={(e) => {
+                e.target.src = "/placeholder.png";
+                e.target.onerror = null;
+              }}
+            />
+          </div>
 
-      {/* Summary Section */}
-      {summary && (
-        <div className="product-summary">
-          <h4>Summary</h4>
-          <p>{summary}</p>
-        </div>
-      )}
+          {/* INFO */}
+          <div className="product-info">
+            <h2 className="product-name">{product.name}</h2>
+            <p className="product-category">Danh mục: {categoryName}</p>
 
-      {/* Reviews Section */}
-      <div className="reviews-section">
-        {reviews.length > 0 ? (
-          <>
-            <p>
-              Average Rating: {averageRating.toFixed(1)} ({totalReviews} reviews)
-            </p>
-            <button className="toggle-btn" onClick={toggleExpand}>
-              {isExpanded ? 'Hide Reviews' : `Show All (${reviews.length})`}
-            </button>
+            {error && <p className="error-message">{error}</p>}
 
-            {isExpanded && (
-              <div className="review-list">
-                {reviews.map((review) => {
-                  const userId = review.userId?._id || review.userId;
-                  const username = usernames[userId] || 'Anonymous';
-                  return (
-                    <div key={review._id} className="review-item">
-                      <div className="review-header">
-                        <span className="reviewer-name">{username}</span>
-                        <span className="review-date">
-                          {new Date(review.createdAt).toLocaleDateString('en-GB')}
-                        </span>
-                      </div>
-                      <div className="review-rating">
-                        {[...Array(5)].map((_, index) => (
-                          <span
-                            key={index}
-                            className={index < review.rating ? 'star-filled' : 'star-empty'}
-                          >
-                            ★
-                          </span>
-                        ))}
-                      </div>
-                      <p className="review-comment">
-                        {review.comment || 'No comment provided.'}
-                      </p>
-                    </div>
-                  );
-                })}
+            {/* PRICE */}
+            <div className="product-price">
+              <span className="current-price">
+                {currentPrice > 0
+                  ? `${currentPrice.toLocaleString()} VND${
+                      optionLabel ? ` / ${optionLabel}` : ""
+                    }`
+                  : "Chưa có giá"}
+              </span>
+            </div>
+
+            {/* PRICE OPTIONS */}
+            <div className="product-options">
+              <label>Chọn loại:</label>
+              <div className="weight-options">
+                {priceOptions.length > 0 ? (
+                  priceOptions.map((opt) => (
+                    <button
+                      key={opt.priceId}
+                      className={`weight-option ${
+                        Number(selectedPriceId) === Number(opt.priceId)
+                          ? "selected"
+                          : ""
+                      }`}
+                      onClick={() => setSelectedPriceId(Number(opt.priceId))}
+                    >
+                      {opt.optionName}
+                    </button>
+                  ))
+                ) : (
+                  <span>Không có cấu hình giá</span>
+                )}
               </div>
-            )}
-          </>
-        ) : (
-          <p>No reviews for this product yet.</p>
-        )}
-      </div>
+            </div>
+
+            {/* COLOR OPTIONS */}
+            <div className="color-section">
+              <label>Chọn màu:</label>
+              <div className="color-options">
+                {colorOptions.map((color) => (
+                  <button
+                    key={color}
+                    className={`color-option ${
+                      selectedColor === color ? "selected" : ""
+                    }`}
+                    onClick={() => setSelectedColor(color)}
+                  >
+                    {color}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* QUANTITY */}
+            <div className="product-quantity">
+              <label>Số lượng:</label>
+              <div className="quantity-controls">
+                <button onClick={() => setQuantity(Math.max(1, quantity - 1))}>
+                  -
+                </button>
+                <input type="text" value={quantity} readOnly />
+                <button onClick={() => setQuantity(quantity + 1)}>+</button>
+              </div>
+            </div>
+
+            {/* ACTION BUTTONS */}
+            <div className="product-actions">
+              <button
+                onClick={handleAddToCart}
+                className="btn-add"
+                disabled={currentPrice <= 0}
+              >
+                Thêm vào giỏ
+              </button>
+              <button
+                onClick={handleBuyNow}
+                className="btn-buy"
+                disabled={currentPrice <= 0}
+              >
+                Mua ngay
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };
 
-export default ProductReview;
+export default ProductItem;

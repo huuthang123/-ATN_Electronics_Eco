@@ -1,9 +1,10 @@
+// src/context/AuthContext.js
 import React, { createContext, useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { apiConfig } from "../config/api";
-import { signIn } from "../services/signinService";
-import { registerUser } from "../services/signupService";
+import { signIn } from "../services/signinApi";
+import { registerUser } from "../services/signupApi";
 
 const AuthContext = createContext();
 
@@ -14,46 +15,59 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     let isMounted = true;
-    const token = localStorage.getItem("token");
+    const storedToken = localStorage.getItem("token");
+    const token = storedToken && typeof storedToken === "string" ? storedToken.trim() : storedToken;
     const tempUserId = localStorage.getItem("tempUserId");
 
     const initializeUser = async () => {
+      // Có token => thử gọi /api/auth/me
       if (token) {
-        console.log("Token từ localStorage:", token);
         try {
           const response = await axios.get(`${apiConfig.baseURL}/api/auth/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
-          console.log("User data từ /me:", response.data);
+          if (!isMounted) return;
 
-          if (isMounted) {
-            setUser({ ...response.data, _id: response.data.id, token, isGuest: false });
-            setLoading(false);
-          }
+          const data = response.data || {};
+
+          // req.user từ backend: { userId, username, email, phone, role, ..., id }
+          setUser({
+            id: data.id || data.userId,
+            userId: data.userId || data.id,
+            username: data.username,
+            email: data.email,
+            phone: data.phone,
+            role: data.role,
+            token,
+            isGuest: false,
+          });
+
+          setLoading(false);
         } catch (error) {
-          console.error("Lỗi khi lấy thông tin user:", error.response?.data || error.message);
-          if (isMounted) {
-            localStorage.removeItem("token");
-            const guestId = tempUserId || `guest-${Math.random().toString(36).substr(2, 9)}`;
-            localStorage.setItem("tempUserId", guestId);
-            setUser({ _id: guestId, isGuest: true });
-            navigate("/sign-in");
-            setLoading(false);
-          }
+          console.error("Lỗi khi lấy thông tin user /auth/me:", error.response?.data || error.message);
+          if (!isMounted) return;
+
+          // Token lỗi => xoá và fallback sang guest
+          localStorage.removeItem("token");
+          const guestId = tempUserId || `guest-${Math.random().toString(36).substr(2, 9)}`;
+          localStorage.setItem("tempUserId", guestId);
+          setUser({ _id: guestId, isGuest: true });
+          navigate("/sign-in");
+          setLoading(false);
         }
       } else if (tempUserId) {
-        if (isMounted) {
-          setUser({ _id: tempUserId, isGuest: true });
-          setLoading(false);
-        }
+        // Không có token nhưng có tempUserId => guest cũ
+        if (!isMounted) return;
+        setUser({ _id: tempUserId, isGuest: true });
+        setLoading(false);
       } else {
+        // Guest mới
         const guestId = `guest-${Math.random().toString(36).substr(2, 9)}`;
         localStorage.setItem("tempUserId", guestId);
-        if (isMounted) {
-          setUser({ _id: guestId, isGuest: true });
-          setLoading(false);
-        }
+        if (!isMounted) return;
+        setUser({ _id: guestId, isGuest: true });
+        setLoading(false);
       }
     };
 
@@ -67,27 +81,34 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     try {
       if (!email || !password) throw new Error("Vui lòng nhập email và mật khẩu.");
-      console.log("Đang gửi request login:", { email, apiURL: apiConfig.baseURL });
 
-      const response = await signIn(email, password);
-      console.log("Response từ login:", response);
+      const response = await signIn(email, password); // POST /api/auth/login
+      const rawToken = response.token;
+      const userData = response.user;
 
-      const { token, user: userData } = response;
-
-      if (!token || typeof token !== "string" || !userData) {
+      if (!rawToken || typeof rawToken !== "string" || !userData) {
         throw new Error("Không nhận được token hoặc dữ liệu user từ server");
       }
+
+      const token = rawToken.trim();
 
       localStorage.setItem("token", token);
       localStorage.removeItem("tempUserId");
 
-      setUser({ ...userData, _id: userData.id, token, isGuest: false });
-      console.log("Đăng nhập thành công, chuyển về trang chủ");
-      navigate("/"); // Chuyển về trang chủ sau khi đăng nhập thành công
+      setUser({
+        id: userData.id || userData.userId,
+        userId: userData.userId || userData.id,
+        username: userData.username,
+        email: userData.email,
+        phone: userData.phone,
+        role: userData.role,
+        token,
+        isGuest: false,
+      });
+
+      navigate("/");
     } catch (error) {
-      console.error("Chi tiết lỗi login:", error);
       const errorMessage = error.message || "Email hoặc mật khẩu không đúng";
-      console.error("Lỗi login:", errorMessage);
       throw new Error(errorMessage);
     }
   };
@@ -98,36 +119,44 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Vui lòng nhập đầy đủ thông tin.");
       }
 
-      console.log("Đang gửi request register:", { username, email, phone });
+      const response = await registerUser({ username, email, phone, password }); // POST /api/auth/register
 
-      const response = await registerUser({ username, email, phone, password });
-      console.log("Response từ register:", response);
+      const rawToken = response.token;
+      const userData = response.user;
 
-      const { token, user: userData } = response;
-
-      if (!token || typeof token !== "string" || !userData) {
+      if (!rawToken || typeof rawToken !== "string" || !userData) {
         throw new Error("Không nhận được token hoặc dữ liệu user từ server");
       }
+
+      const token = rawToken.trim();
 
       localStorage.setItem("token", token);
       localStorage.removeItem("tempUserId");
 
-      setUser({ ...userData, _id: userData.id, token, isGuest: false });
-      navigate("/"); // Chuyển về trang chủ sau khi đăng ký thành công
+      setUser({
+        id: userData.id || userData.userId,
+        userId: userData.userId || userData.id,
+        username: userData.username,
+        email: userData.email,
+        phone: userData.phone,
+        role: userData.role,
+        token,
+        isGuest: false,
+      });
+
+      navigate("/");
     } catch (error) {
       const errorMessage = error.message || "Đăng ký thất bại";
-      console.error("Lỗi register:", errorMessage);
       throw new Error(errorMessage);
     }
   };
 
   const logout = () => {
-    console.log("Đăng xuất, xóa token và chuyển sang guest");
     localStorage.removeItem("token");
     const guestId = `guest-${Math.random().toString(36).substr(2, 9)}`;
     localStorage.setItem("tempUserId", guestId);
     setUser({ _id: guestId, isGuest: true });
-    navigate("/"); // Chuyển về trang chủ hoặc trang bạn muốn
+    navigate("/");
   };
 
   return (

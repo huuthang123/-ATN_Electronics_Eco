@@ -1,6 +1,6 @@
 const express = require('express');
-const OrderController = require('../controllers/OrderController');
-const { protect, restrictTo } = require('../middleware/authMiddleware');
+const OrderController = require('../controllers/orderController');
+const { protect, restrictTo } = require('../middleware/authMiddleware'); // ✔ Đúng
 const router = express.Router();
 
 router.get('/me', protect, OrderController.getUserOrders);

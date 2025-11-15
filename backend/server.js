@@ -61,6 +61,9 @@ app.use("/api/categories", require("./routes/CategoryRoutes"));
 app.use("/api/attributes", require("./routes/AttributeRoutes"));
 app.use("/api/prices", require("./routes/PriceRoutes"));
 app.use("/api/summary", require("./routes/SummaryRoutes"));
+app.use("/api/related", require("./routes/RelatedRoutes"));
+app.use("/api/search", require("./routes/SearchRoutes"));
+
 
 // Endpoint nhận summary từ Python (Socket)
 app.post("/api/summaries", (req, res) => {

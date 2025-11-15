@@ -43,6 +43,7 @@ const Cart = () => {
       setError("Vui lòng chọn ít nhất một sản phẩm để thanh toán!");
       return;
     }
+
     navigate("/payment", {
       state: { selectedAddress, selectedItems, total },
     });
@@ -52,6 +53,7 @@ const Cart = () => {
     const productPath = categoryName
       ? `/product/${encodeURIComponent(categoryName)}/${productId}`
       : `/product/unknown/${productId}`;
+
     navigate(productPath);
   };
 
@@ -71,6 +73,7 @@ const Cart = () => {
       <div className="address-section">
         <h3>Địa chỉ giao hàng</h3>
         {error && <p className="error-message">{error}</p>}
+
         {selectedAddress && !isAddingNew ? (
           <div className="selected-address">
             <p>
@@ -92,6 +95,7 @@ const Cart = () => {
             isAddingNew={isAddingNew}
           />
         )}
+
         {selectedAddress && !isAddingNew && (
           <button
             className="add-address-btn"
@@ -119,15 +123,12 @@ const Cart = () => {
           <span>Thao Tác</span>
         </div>
 
-        {Array.isArray(cartItems) && cartItems.length === 0 ? (
+        {cartItems.length === 0 ? (
           <p className="empty-cart">Giỏ hàng của bạn đang trống.</p>
         ) : (
           cartItems.map((item) => {
-            console.log('🔍 Cart item:', item);
-            console.log('🔍 Item name:', item.name);
-            console.log('🔍 Item attributes:', item.attributes);
-            const categoryName = item.categoryId?.name || "Đang cập nhật";
-            const size = item.attributes?.size || '250';
+            const categoryName = item.categoryName || "Đang cập nhật";
+            const size = item.attributes?.size || "250";
 
             return (
               <div
@@ -139,41 +140,48 @@ const Cart = () => {
                   checked={item.selected}
                   onChange={(e) => {
                     e.stopPropagation();
-                    toggleItemSelection(item.productId, item.attributes || { size: '250' });
+                    toggleItemSelection(item.productId, item.attributes);
                   }}
                 />
+
                 <div
                   className="cart-item-details"
                   onClick={() => handleViewProduct(item.productId, categoryName)}
                   style={{ cursor: "pointer" }}
                 >
-                  <img 
-                    src={item.image} 
-                    alt={item.name} 
+                  <img
+                    src={item.image}
+                    alt={item.name}
                     className="cart-item-image"
                     onError={(e) => {
-                      e.target.src = '/placeholder.png';
+                      e.target.src = "/placeholder.png";
                       e.target.onerror = null;
                     }}
                   />
+
                   <div className="cart-item-info">
                     <p>
-                      <CartItemInfo 
-                        productId={item.productId} 
-                        fallbackName={item.name || 'Tên sản phẩm'} 
+                      <CartItemInfo
+                        productId={item.productId}
+                        fallbackName={item.name || "Tên sản phẩm"}
                       />
                     </p>
                   </div>
                 </div>
+
                 <div className="cart-item-classification">
                   {categoryName}, {size}
                 </div>
-                <div className="cart-item-price">{item.price.toLocaleString()}đ</div>
+
+                <div className="cart-item-price">
+                  {item.price.toLocaleString()}đ
+                </div>
+
                 <div className="cart-item-quantity">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      decreaseQuantity(item.productId, item.attributes || { size: '250' });
+                      decreaseQuantity(item.productId, item.attributes);
                     }}
                   >
                     -
@@ -182,20 +190,22 @@ const Cart = () => {
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      increaseQuantity(item.productId, item.attributes || { size: '250' });
+                      increaseQuantity(item.productId, item.attributes);
                     }}
                   >
                     +
                   </button>
                 </div>
+
                 <div className="cart-item-total">
                   {(item.price * item.quantity).toLocaleString()}đ
                 </div>
+
                 <div className="cart-item-actions">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      removeFromCart(item.productId, item.attributes || { size: '250' });
+                      removeFromCart(item.productId, item.attributes);
                     }}
                   >
                     Xóa
@@ -210,10 +220,12 @@ const Cart = () => {
       <div className="cart-summary">
         <div className="summary-details">
           <p>
-            Tổng thanh toán ({cartItems.filter((item) => item.selected).length} sản phẩm): {" "}
+            Tổng thanh toán (
+            {cartItems.filter((item) => item.selected).length} sản phẩm):
             <span>{total.toLocaleString()}đ</span>
           </p>
         </div>
+
         <button
           className="checkout-btn"
           onClick={handleCheckout}

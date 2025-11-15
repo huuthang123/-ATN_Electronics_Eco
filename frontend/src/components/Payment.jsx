@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import axios from "axios";
-import AddressService from "../services/AddressService"; // Import AddressService
+import AddressService from "../services/addressApi"; // Import AddressService
 import "../styles/Payment.css";
 
 const Payment = () => {

@@ -1,10 +1,9 @@
-// src/components/CartSidebar.jsx
-import React, { useEffect } from 'react';
-import '../styles/cartsidebar.css';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import CartItemInfo from './CartItemInfo';
+import React, { useEffect } from "react";
+import "../styles/cartsidebar.css";
+import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import CartItemInfo from "./CartItemInfo";
 
 function CartSidebar() {
   const {
@@ -32,7 +31,6 @@ function CartSidebar() {
             logout();
             navigate("/sign-in");
           } else {
-            console.error("Lỗi khi lấy giỏ hàng từ server:", error);
             loadCartFromLocalStorage();
           }
         }
@@ -44,10 +42,12 @@ function CartSidebar() {
     initializeCart();
   }, [user, fetchCartFromServer, loadCartFromLocalStorage, logout, navigate]);
 
-  const handleViewCart = () => navigate('/cart');
+  const handleViewCart = () => navigate("/cart");
 
   const handleViewProduct = (productId, categoryName) => {
-    const path = categoryName ? `/product/${encodeURIComponent(categoryName)}/${productId}` : `/product/unknown/${productId}`;
+    const path = categoryName
+      ? `/product/${encodeURIComponent(categoryName)}/${productId}`
+      : `/product/unknown/${productId}`;
     navigate(path);
   };
 
@@ -60,7 +60,7 @@ function CartSidebar() {
         <span className="cart-count-badge">{numberOfItems}</span>
       </div>
 
-      <div id="cart-sidebar" className={isOpen ? 'open' : 'closed'}>
+      <div id="cart-sidebar" className={isOpen ? "open" : "closed"}>
         <div className="cart-header">
           <h2>⚡ Giỏ hàng TechStore</h2>
           <button className="close-btn" onClick={toggleCart}>
@@ -74,72 +74,82 @@ function CartSidebar() {
 
         <ul id="cart-items">
           {cartItems.map((item) => {
-            console.log('🔍 CartSidebar item:', item);
-            console.log('🔍 Item name:', item.name);
-            console.log('🔍 Item attributes:', item.attributes);
+            const categoryName = item.categoryName || "Đang cập nhật";
+
             return (
-            <li key={`${item.productId}-${JSON.stringify(item.attributes)}`} className="cart-item">
-              <div
-                className="cart-item-details"
-                onClick={() => handleViewProduct(item.productId, item.categoryName)}
-                style={{ cursor: 'pointer' }}
+              <li
+                key={`${item.productId}-${JSON.stringify(item.attributes)}`}
+                className="cart-item"
               >
-                <img 
-                  src={item.image} 
-                  alt={item.name} 
-                  className="cart-item-image"
-                  onError={(e) => {
-                    e.target.src = '/placeholder.png';
-                    e.target.onerror = null;
-                  }}
-                />
-                <div className="cart-item-info">
-                  <span>
-                    <CartItemInfo 
-                      productId={item.productId} 
-                      fallbackName={item.name || 'Tên sản phẩm'} 
-                    />
-                    {item.attributes && Object.keys(item.attributes).length > 0 && (
-                      <span className="attributes">
-                        ({displayAttributes(item.attributes)})
-                      </span>
-                    )}
-                  </span>
-                  <span>
-                    {typeof item.price === 'number' ? `${item.price.toLocaleString()} VND` : "Chưa có giá"}
-                  </span>
-                  <div className="quantity-controls">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log('Calling decreaseQuantity with:', { productId: item.productId, attributes: item.attributes });
-                        decreaseQuantity(item.productId, item.attributes || { size: 'S' });
-                      }}
-                    >
-                      -
-                    </button>
-                    <span>{item.quantity}</span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log('Calling increaseQuantity with:', { productId: item.productId, attributes: item.attributes });
-                        increaseQuantity(item.productId, item.attributes || { size: 'S' });
-                      }}
-                    >
-                      +
-                    </button>
+                <div
+                  className="cart-item-details"
+                  onClick={() =>
+                    handleViewProduct(item.productId, categoryName)
+                  }
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="cart-item-image"
+                    onError={(e) => {
+                      e.target.src = "/placeholder.png";
+                      e.target.onerror = null;
+                    }}
+                  />
+
+                  <div className="cart-item-info">
+                    <span>
+                      <CartItemInfo
+                        productId={item.productId}
+                        fallbackName={item.name || "Tên sản phẩm"}
+                      />
+
+                      {item.attributes &&
+                        Object.keys(item.attributes).length > 0 && (
+                          <span className="attributes">
+                            ({displayAttributes(item.attributes)})
+                          </span>
+                        )}
+                    </span>
+
+                    <span>
+                      {typeof item.price === "number"
+                        ? `${item.price.toLocaleString()} VND`
+                        : "Chưa có giá"}
+                    </span>
+
+                    <div className="quantity-controls">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          decreaseQuantity(item.productId, item.attributes);
+                        }}
+                      >
+                        -
+                      </button>
+
+                      <span>{item.quantity}</span>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          increaseQuantity(item.productId, item.attributes);
+                        }}
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-              <button
-                onClick={() => {
-                  console.log('Calling removeFromCart with:', { productId: item.productId, attributes: item.attributes });
-                  removeFromCart(item.productId, item.attributes || { size: 'S' });
-                }}
-              >
-                Xóa
-              </button>
-            </li>
+
+                <button
+                  onClick={() =>
+                    removeFromCart(item.productId, item.attributes)
+                  }
+                >
+                  Xóa
+                </button>
+              </li>
             );
           })}
         </ul>

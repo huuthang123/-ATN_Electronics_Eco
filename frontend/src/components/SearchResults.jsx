@@ -1,92 +1,129 @@
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import Header from "../components/Header";
 import "../styles/SearchResults.css";
+import { apiConfig } from "../config/api";
 
 function SearchResults() {
   const [searchParams] = useSearchParams();
-  const keyword = searchParams.get("keyword") || "";
+  const keyword = searchParams.get("q") || "";
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
+  const BASE_URL =
+    apiConfig?.baseURL ||
+    process.env.REACT_APP_API_URL ||
+    "http://localhost:5000";
+
+  // 🚀 LOAD KẾT QUẢ TÌM KIẾM
   useEffect(() => {
-    if (keyword.trim()) {
-      setLoading(true);
-      axios
-        .get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/products/search-embedding?keyword=${encodeURIComponent(keyword)}`)
-        .then((res) => {
-          // Backend trả về dạng { success: true, results: [...] }
-          const results = res.data.results || [];
-          // Chuẩn hóa dữ liệu để có đầy đủ thông tin
-          const normalized = results.map((item) => ({
-            _id: item.id,
-            name: item.name,
-            image: item.image,
-            prices: item.prices,
-            categoryName: item.category,
-            score: item.score
-          }));
-          setResults(normalized);
-          setLoading(false);
-        })
-        .catch((err) => {
-          console.error("❌ Lỗi tìm kiếm:", err);
-          setResults([]);
-          setLoading(false);
-        });
-    } else {
+    if (!keyword.trim()) {
       setResults([]);
-      setLoading(false);
+      return;
     }
-  }, [keyword]);
 
-  const getFirstValidPrice = (prices) => {
-    if (!prices) return 0;
-    const validSizes = ["250", "500", "1000"];
-    const keys = Object.keys(prices);
-    const key = keys.find(k => validSizes.includes(k)) || keys[0];
-    return key && prices[key] ? prices[key] : 0;
+    setLoading(true);
+
+    axios
+      .get(`${BASE_URL}/api/search/semantic?q=${encodeURIComponent(keyword)}`)
+      .then((res) => {
+        const raw = Array.isArray(res.data) ? res.data : [];
+
+        const normalized = raw.map((item) => ({
+          productId: item.productId,
+          name: item.name,
+          image: item.image,
+          similarity: item.similarity ?? null,
+          productPrices: item.productPrices || [],
+          rating: item.rating || 5,
+          sold: item.sold || 0,
+        }));
+
+        setResults(normalized);
+      })
+      .catch((err) => {
+        console.error("❌ Lỗi tìm kiếm:", err);
+        setResults([]);
+      })
+      .finally(() => setLoading(false));
+  }, [keyword, BASE_URL]);
+
+  // ⭐ LẤY GIÁ GIỐNG MENU — LẤY OPTION ĐẦU TIÊN
+  const getMenuPrice = (productPrices) => {
+    const firstPrice = productPrices?.[0] || null;
+
+    return {
+      price: firstPrice ? Number(firstPrice.optionPrice) : 0,
+      option: firstPrice ? firstPrice.optionName : "Không có giá",
+    };
   };
 
-  if (loading) return <p>⏳ Đang tìm kiếm...</p>;
-
-  if (!results.length) return <p>Không tìm thấy sản phẩm</p>;
-
   return (
-    <div className="search-results">
-      <h2>Kết quả tìm kiếm embedding cho: "{keyword}"</h2>
-      <p className="search-info">Tìm thấy {results.length} sản phẩm liên quan</p>
-      <div className="product-list">
-        {results.map((p) => {
-          const price = getFirstValidPrice(p.prices);
-          return (
-            <div key={p._id} className="product-item">
-              <div className="product-image">
-                <img 
-                  src={p.image} 
-                  alt={p.name}
-                  onError={(e) => {
-                    e.target.src = '/placeholder.png';
-                    e.target.onerror = null;
-                  }}
-                />
-              </div>
-              <div className="product-info">
-                <h3>{p.name}</h3>
-                <p className="category">{p.categoryName}</p>
-                <p className="price">{price ? `${price.toLocaleString()}₫` : "Giá chưa cập nhật"}</p>
-                {p.score && (
-                  <div className="relevance-score">
-                    <span className="score-label">Độ liên quan:</span>
-                    <span className="score-value">{(p.score * 100).toFixed(1)}%</span>
+    <>
+      <Header />
+
+      <div className="search-results-container">
+        <h2 className="search-title">Kết quả tìm kiếm cho: "{keyword}"</h2>
+
+        {!loading && (
+          <p className="search-subtitle">Tìm thấy {results.length} sản phẩm</p>
+        )}
+
+        {loading ? (
+          <div className="loading-container">
+            <p>⏳ Đang tải...</p>
+          </div>
+        ) : results.length === 0 ? (
+          <div className="no-products">
+            <p>Không tìm thấy sản phẩm</p>
+          </div>
+        ) : (
+          <div className="search-grid">
+            {results.map((p) => {
+              const { price, option } = getMenuPrice(p.productPrices);
+
+              return (
+                <div
+                  key={p.productId}
+                  className="search-card"
+                  onClick={() => navigate(`/product/${p.productId}`)} // ⭐ ĐIỀU HƯỚNG CHUẨN
+                >
+                  {/* Ảnh sản phẩm */}
+                  <div className="search-card-image">
+                    <img src={p.image} alt={p.name} />
                   </div>
-                )}
-              </div>
-            </div>
-          );
-        })}
+
+                  {/* Tên sản phẩm */}
+                  <h3 className="search-card-title">{p.name}</h3>
+
+                  {/* Giá */}
+                  <div className="search-card-price">
+                    {price > 0
+                      ? `${price.toLocaleString()} VND / ${option}`
+                      : "Giá chưa cập nhật"}
+                  </div>
+
+                  {/* Meta */}
+                  <div className="food-meta">
+                    <span>⭐ {p.rating}</span>
+                    <span>Đã bán {p.sold}</span>
+                  </div>
+
+                  {/* Similarity */}
+                  {p.similarity !== null && (
+                    <div className="search-similarity">
+                      {Math.round(p.similarity * 100)}% phù hợp
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }
 

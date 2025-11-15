@@ -1,21 +1,23 @@
-const { sql } = require('../config/db');
-
-async function getByProduct(productId) {
-  const r = await sql.query(`
-    SELECT r.*, u.username 
-    FROM Review r
-    JOIN Users u ON r.userId = u.userId
-    WHERE r.productId = ${productId}
-    ORDER BY r.createdAt DESC
-  `);
-  return r.recordset;
+class Review {
+  constructor({
+    reviewId,
+    userId,
+    orderId,
+    productId,
+    rating,
+    comment,
+    createdAt,
+    username
+  }) {
+    this.reviewId = reviewId;
+    this.userId = userId;
+    this.orderId = orderId;
+    this.productId = productId;
+    this.rating = rating;
+    this.comment = comment;
+    this.createdAt = createdAt;
+    this.username = username; // join từ Users
+  }
 }
 
-async function create({ userId, orderId, productId, rating, comment }) {
-  await sql.query`
-    INSERT INTO Review (userId, orderId, productId, rating, comment, createdAt)
-    VALUES (${userId}, ${orderId}, ${productId}, ${rating}, ${comment}, GETDATE())
-  `;
-}
-
-module.exports = { getByProduct, create };
+module.exports = Review;

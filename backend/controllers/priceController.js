@@ -1,69 +1,80 @@
-const db = require('../models');
-const Price = db.Price;
+const PriceService = require('../services/PriceService');
 
 class PriceController {
-  // [POST] /api/prices
-  static async addPrice(req, res) {
-    try {
-      const { categoryId, priceByOption } = req.body;
-      const price = await Price.create({ categoryId, priceByOption });
-      res.status(201).json({ success: true, price });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
-    }
-  }
 
-  // [GET] /api/prices
+  // GET /api/prices?productId=xx
   static async getPrices(req, res) {
     try {
-      const { categoryId } = req.query;
-      const where = categoryId ? { categoryId } : undefined;
-      const prices = await Price.findAll({ where });
-      res.json({ success: true, prices });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      const { productId } = req.query;
+      const prices = await PriceService.getPrices(productId);
+
+      res.json({
+        success: true,
+        data: prices  // chuẩn REST: data
+      });
+
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
     }
   }
 
-  // [GET] /api/prices/:id
+  // GET /api/prices/:id
   static async getPriceById(req, res) {
     try {
-      const { id } = req.params;
-      const price = await Price.findByPk(id);
+      const price = await PriceService.getPriceById(req.params.id);
+
       if (!price)
-        return res.status(404).json({ message: 'Bảng giá không tồn tại!' });
-      res.json({ success: true, price });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+        return res.status(404).json({ success: false, message: "Không tìm thấy!" });
+
+      res.json({ success: true, data: price });
+
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
     }
   }
 
-  // [PUT] /api/prices/:id
+  // POST /api/prices
+  static async addPrice(req, res) {
+    try {
+      await PriceService.createPrice(req.body);
+
+      res.status(201).json({
+        success: true,
+        message: 'Tạo thành công!'
+      });
+
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
+    }
+  }
+
+  // PUT /api/prices/:id
   static async updatePrice(req, res) {
     try {
-      const { id } = req.params;
-      const [count] = await Price.update(req.body, { where: { id } });
-      if (!count)
-        return res.status(404).json({ message: 'Bảng giá không tồn tại!' });
+      await PriceService.updatePrice(req.params.id, req.body);
 
-      const updated = await Price.findByPk(id);
-      res.json({ success: true, price: updated });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      res.json({
+        success: true,
+        message: 'Cập nhật thành công!'
+      });
+
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
     }
   }
 
-  // [DELETE] /api/prices/:id
+  // DELETE /api/prices/:id
   static async deletePrice(req, res) {
     try {
-      const { id } = req.params;
-      const deleted = await Price.destroy({ where: { id } });
-      if (!deleted)
-        return res.status(404).json({ message: 'Bảng giá không tồn tại!' });
+      await PriceService.deletePrice(req.params.id);
 
-      res.json({ success: true, message: 'Xoá bảng giá thành công!' });
-    } catch (error) {
-      res.status(500).json({ success: false, message: error.message });
+      res.json({
+        success: true,
+        message: 'Xoá thành công!'
+      });
+
+    } catch (err) {
+      res.status(500).json({ success: false, message: err.message });
     }
   }
 }

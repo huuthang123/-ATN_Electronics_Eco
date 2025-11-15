@@ -1,52 +1,57 @@
 // middleware/authMiddleware.js
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const UserDAO = require('../dao/UserDAO');   // ✔ DÙNG DAO, KHÔNG DÙNG MODEL
 
 const protect = async (req, res, next) => {
   let token;
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    token = req.headers.authorization.split(' ')[1];
-    if (!token || typeof token !== 'string' || token.trim() === '') {
-      return res.status(401).json({ message: 'Token không hợp lệ, thiếu giá trị hoặc sai định dạng' });
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer")) {
+    token = req.headers.authorization.split(" ")[1];
+
+    if (!token || typeof token !== "string" || token.trim() === "") {
+      return res.status(401).json({ message: "Token không hợp lệ hoặc trống" });
     }
 
     try {
+      // Giải mã token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.id);
+
+      // Lấy user từ DB qua DAO
+      const user = await UserDAO.findById(decoded.id);
 
       if (!user) {
-        return res.status(401).json({ message: 'Không tìm thấy người dùng, token không hợp lệ' });
+        return res.status(401).json({ message: "Token không hợp lệ — không tìm thấy user" });
       }
 
-      // Loại bỏ password khỏi user object và đảm bảo có cả id và userId
+      // Loại bỏ password
       const { password, ...userWithoutPassword } = user;
+
       req.user = {
         ...userWithoutPassword,
-        id: userWithoutPassword.userId, // Thêm id để tương thích
-        userId: userWithoutPassword.userId // Giữ nguyên userId
+        id: user.userId,      // dùng chuẩn userId
+        userId: user.userId,
       };
 
-      next();
+      return next();
+
     } catch (error) {
-      console.error('Lỗi xác thực token:', error);
-      if (error.name === 'JsonWebTokenError') {
-        return res.status(401).json({ message: 'Token không hợp lệ (malformed)' });
+      console.error("Lỗi xác thực token:", error);
+
+      if (error.name === "TokenExpiredError") {
+        return res.status(401).json({ message: "Token đã hết hạn" });
       }
-      if (error.name === 'TokenExpiredError') {
-        return res.status(401).json({ message: 'Token đã hết hạn' });
-      }
-      return res.status(401).json({ message: 'Không có quyền truy cập, token không hợp lệ' });
+
+      return res.status(401).json({ message: "Token không hợp lệ" });
     }
-  } else {
-    return res.status(401).json({ message: 'Không có quyền truy cập, thiếu token' });
   }
+
+  return res.status(401).json({ message: "Thiếu token" });
 };
 
 const restrictTo = (role) => {
   return (req, res, next) => {
     if (!req.user || req.user.role !== role) {
-      return res.status(403).json({ message: 'Bạn không có quyền thực hiện hành động này' });
+      return res.status(403).json({ message: "Không có quyền thực hiện hành động này" });
     }
     next();
   };
