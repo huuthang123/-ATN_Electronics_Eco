@@ -5,9 +5,16 @@
 body {
   font-family: var(--primary-font);
   background-color: var(--background-color);
+<<<<<<< HEAD
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+=======
   margin-top: 60px;
   padding: 0;
   min-height: 100vh;
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
 }
 
 /* Style cho Navbar (Header) - Đồng bộ với frontend */

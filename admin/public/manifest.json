@@ -1,6 +1,11 @@
 {
+<<<<<<< HEAD
+  "short_name": "Techstore",
+  "name": "Techstore Admin Panel",
+=======
   "short_name": "React App",
   "name": "Create React App Sample",
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
   "icons": [
     {
       "src": "favicon.ico",

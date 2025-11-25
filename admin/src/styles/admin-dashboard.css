@@ -297,3 +297,256 @@
     color: var(--neutral-400);
   }
 }
+<<<<<<< HEAD
+
+/* Dark Sidebar Layout */
+.admin-dashboard-layout {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+/* Dark Sidebar */
+.admin-sidebar {
+  width: 280px;
+  background-color: #0f172a;
+  flex-shrink: 0;
+  position: fixed;
+  left: 0;
+  top: 64px; /* Bắt đầu từ dưới NavBar */
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  z-index: 1100; /* Cao hơn NavBar (1030) để không bị che */
+}
+
+.admin-sidebar-menu {
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.admin-sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background-color: transparent;
+  border: none;
+  border-radius: 0.75rem;
+  color: #e2e8f0;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  width: 100%;
+}
+
+.admin-sidebar-item:hover {
+  background-color: #1e293b;
+  color: #ffffff;
+}
+
+.admin-sidebar-item.active {
+  background-color: #1e293b;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.admin-sidebar-item svg {
+  flex-shrink: 0;
+  stroke-width: 2;
+}
+
+.admin-sidebar-item span {
+  flex: 1;
+}
+
+/* Main Content Area */
+.admin-main-content {
+  flex: 1;
+  margin-left: 280px;
+  padding-top: 64px; /* Tránh bị che bởi NavBar */
+  background-color: #f5f5f5;
+  min-height: calc(100vh - 64px); /* Bù trừ padding-top */
+  overflow-y: auto;
+}
+
+.admin-dashboard {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Revenue Filters */
+.revenue-filters {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.revenue-filters label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.revenue-filters select,
+.revenue-filters input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.revenue-filters select:focus,
+.revenue-filters input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Status Filter Buttons */
+.status-filter {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.status-filter button {
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  transition: all 0.2s ease;
+}
+
+.status-filter button:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.status-filter button.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* Order Details */
+.order-details {
+  padding: 1.5rem;
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+
+.order-details h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #111827;
+  font-size: 1.25rem;
+}
+
+.order-details h4 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.order-info {
+  margin-bottom: 1rem;
+}
+
+.order-info p {
+  margin: 0.5rem 0;
+  color: #4b5563;
+}
+
+.product-details-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.75rem;
+}
+
+.product-details-table th,
+.product-details-table td {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.product-details-table th {
+  background-color: #f3f4f6;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Responsive Design for Sidebar */
+@media (max-width: 1024px) {
+  .admin-sidebar {
+    width: 240px;
+  }
+
+  .admin-main-content {
+    margin-left: 240px;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 200px;
+  }
+
+  .admin-main-content {
+    margin-left: 200px;
+  }
+
+  .admin-sidebar-item {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .admin-dashboard {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .admin-sidebar-menu {
+    flex-direction: row;
+    padding: 1rem;
+    width: 100%;
+  }
+
+  .admin-sidebar-item {
+    white-space: nowrap;
+    min-width: fit-content;
+  }
+
+  .admin-main-content {
+    margin-left: 0;
+  }
+
+  .admin-dashboard {
+    padding: 1rem;
+  }
+}
+=======
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
