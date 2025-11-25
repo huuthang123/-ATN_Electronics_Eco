@@ -1,6 +1,10 @@
 // src/pages/Revenue.jsx
 import React, { useState, useEffect, useRef } from 'react';
+<<<<<<< HEAD
 import { getRevenue } from '../services/orderService';
+=======
+import axios from 'axios';
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
 import { Chart } from 'chart.js/auto';
 
 const RevenuePage = () => {
@@ -13,8 +17,17 @@ const RevenuePage = () => {
   useEffect(() => {
     const fetchRevenue = async () => {
       try {
+<<<<<<< HEAD
         console.log('Calling API: /api/orders/revenue', { startDate, endDate, groupBy });
         const data = await getRevenue({ startDate, endDate, groupBy });
+=======
+        const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        console.log('Calling API:', `${API_URL}/api/orders/revenue?startDate=${startDate}&endDate=${endDate}&groupBy=${groupBy}`);
+        const { data } = await axios.get(`${API_URL}/api/orders/revenue`, {
+          params: { startDate, endDate, groupBy },
+          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        });
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
         console.log('API Response:', data);
         setRevenueData(data.revenue || []);
       } catch (error) {

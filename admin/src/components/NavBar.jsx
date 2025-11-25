@@ -29,20 +29,54 @@ const NavBar = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+<<<<<<< HEAD
+=======
+  const navItems = [
+    { path: "/dashboard", label: "Dashboard", icon: "🏠" },
+    { path: "/revenue", label: "Doanh thu", icon: "📊" },
+    { path: "/products", label: "Sản phẩm", icon: "📦" },
+    { path: "/orders", label: "Đơn hàng", icon: "🛒" }
+  ];
+
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
   return (
     <header className="admin-navbar">
       <div className="admin-navbar-container">
         {/* Logo & Brand */}
         <div className="admin-navbar-brand">
           <div className="admin-logo">
+<<<<<<< HEAD
             <img src="/logo.png" alt="Techstore" className="admin-logo-icon" />
             <div className="admin-logo-text">
               <h1>Admin Panel</h1>
               <span>Techstore</span>
+=======
+            <div className="admin-logo-icon">🏪</div>
+            <div className="admin-logo-text">
+              <h1>Admin Panel</h1>
+              <span>Hương Việt Tinh</span>
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
             </div>
           </div>
         </div>
 
+<<<<<<< HEAD
+=======
+        {/* Desktop Navigation */}
+        <nav className="admin-navbar-nav">
+          {navItems.map((item) => (
+            <button
+              key={item.path}
+              className={`admin-nav-item ${location.pathname === item.path ? 'active' : ''}`}
+              onClick={() => navigate(item.path)}
+            >
+              <span className="admin-nav-icon">{item.icon}</span>
+              <span className="admin-nav-label">{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
         {/* User Menu */}
         <div className="admin-navbar-user">
           <div className="admin-user-dropdown">
@@ -117,7 +151,41 @@ const NavBar = () => {
           </div>
         </div>
 
+<<<<<<< HEAD
       </div>
+=======
+        {/* Mobile Menu Button */}
+        <button
+          className="admin-mobile-menu-button"
+          onClick={toggleMobileMenu}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M3 12H21M3 6H21M3 18H21" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="admin-mobile-menu">
+          <div className="admin-mobile-menu-content">
+            {navItems.map((item) => (
+              <button
+                key={item.path}
+                className={`admin-mobile-nav-item ${location.pathname === item.path ? 'active' : ''}`}
+                onClick={() => {
+                  navigate(item.path);
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <span className="admin-mobile-nav-icon">{item.icon}</span>
+                <span className="admin-mobile-nav-label">{item.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
     </header>
   );
 };

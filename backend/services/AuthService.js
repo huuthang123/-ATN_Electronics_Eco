@@ -25,6 +25,7 @@ class AuthService {
     if (!user) throw new Error('Email không tồn tại');
 
     const bcrypt = require('bcryptjs');
+<<<<<<< HEAD
     
     // Debug: Log để kiểm tra
     console.log('🔍 Debug login:');
@@ -55,6 +56,14 @@ class AuthService {
     const accessToken = jwt.sign(
       { id: user.userId },
       process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+=======
+    const ok = await bcrypt.compare(password, user.password);
+    if (!ok) throw new Error('Sai mật khẩu');
+
+    const accessToken = jwt.sign(
+      { id: user.userId },
+      process.env.JWT_SECRET,
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
       { expiresIn: "1h" }
     );
 
