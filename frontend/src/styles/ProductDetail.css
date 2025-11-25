@@ -1,0 +1,75 @@
+/* ===================== PAGE WRAPPER ===================== */
+.product-detail {
+  display: flex;
+  flex-direction: column;
+  background: #f5f5f7;
+  min-height: 100vh;
+  padding-top: 80px;
+  font-family: "Inter", sans-serif;
+}
+
+/* ===================== INNER CONTENT ===================== */
+.product-content {
+  width: 100%;
+  max-width: 1200px;
+  margin: 20px auto 60px auto;
+  padding: 0; /* để tránh bị lồng padding gây lệch bố cục */
+}
+
+/* ====== REMOVE ALL OLD RED BOX, SHADOW, BORDER (UGLY) ====== */
+.product-content {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ===================== REVIEW + RELATED ITEMS ===================== */
+.product-content > * {
+  margin-bottom: 40px;
+}
+
+/* ===================== ADDRESS SECTION (LƯU NGUYÊN) ===================== */
+.address-section {
+  margin-top: 40px;
+  padding: 25px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1px solid #ddd;
+}
+
+/* Modal giữ nguyên */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 768px) {
+  .product-content {
+    padding: 0 10px;
+  }
+}
+/* ===================== BORDER FOR MAIN PRODUCT BLOCK ===================== */
+.product-item {
+  border: 2px solid #ffcc99; /* cam pastel */
+  border-radius: 16px;
+  padding: 25px;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 140, 0, 0.12); /* nhẹ nhàng */
+}
