@@ -29,7 +29,6 @@ export const AuthProvider = ({ children }) => {
 
   const signIn = async (email, password) => {
     try {
-<<<<<<< HEAD
       if (!email || !password) throw new Error("Vui lòng nhập email và mật khẩu.");
 
       const response = await login(email, password); // POST /api/auth/login
@@ -68,21 +67,6 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error("Lỗi đăng nhập:", error);
       throw error; // Re-throw để SignIn component có thể hiển thị
-=======
-      const data = await login(email, password);
-      localStorage.setItem("token", data.token);
-      const userData = await getMe();
-      setUser(userData);
-      if (userData.role === "admin") {
-        navigate("/products");
-      } else {
-        alert("Chỉ admin mới có quyền truy cập!");
-        localStorage.removeItem("token");
-        setUser(null);
-      }
-    } catch (error) {
-      alert("Đăng nhập thất bại: " + error.message);
->>>>>>> ae0593a67756b636735aa87496db449960755e2a
     }
   };
 
