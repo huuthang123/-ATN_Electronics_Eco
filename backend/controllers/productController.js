@@ -46,11 +46,7 @@ class ProductController {
       });
     } catch (err) {
       console.error("addProduct error:", err);
-<<<<<<< HEAD
       res.status(500).json({ success: false, message: err.message });
-=======
-      res.status(500).json({ message: err.message });
->>>>>>> ae0593a67756b636735aa87496db449960755e2a
     }
   }
 
@@ -60,11 +56,7 @@ class ProductController {
       res.json({ success: true, message: "Cập nhật thành công" });
     } catch (err) {
       console.error("updateProduct error:", err);
-<<<<<<< HEAD
       res.status(500).json({ success: false, message: err.message });
-=======
-      res.status(500).json({ message: err.message });
->>>>>>> ae0593a67756b636735aa87496db449960755e2a
     }
   }
 
@@ -72,21 +64,12 @@ class ProductController {
     try {
       const ok = await ProductService.delete(req.params.id);
       if (!ok) {
-<<<<<<< HEAD
         return res.status(404).json({ success: false, message: "Không tồn tại" });
       }
       res.json({ success: true, message: "Xóa sản phẩm thành công" });
     } catch (err) {
       console.error("deleteProduct error:", err);
       res.status(500).json({ success: false, message: err.message });
-=======
-        return res.status(404).json({ message: "Không tồn tại" });
-      }
-      res.json({ success: true });
-    } catch (err) {
-      console.error("deleteProduct error:", err);
-      res.status(500).json({ message: err.message });
->>>>>>> ae0593a67756b636735aa87496db449960755e2a
     }
   }
 

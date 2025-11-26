@@ -15,12 +15,8 @@ const SignIn = () => {
     try {
       await signIn(email, password);
     } catch (err) {
-<<<<<<< HEAD
       console.error("Lỗi đăng nhập:", err);
       setError(err.message || "Đăng nhập thất bại! Vui lòng kiểm tra lại email và mật khẩu.");
-=======
-      setError(err.message || "Đăng nhập thất bại!");
->>>>>>> ae0593a67756b636735aa87496db449960755e2a
     }
   };
 

@@ -41,15 +41,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-<<<<<<< HEAD
   border-radius: var(--radius-lg);
   object-fit: contain;
-=======
-  background: linear-gradient(135deg, var(--primary-500), var(--primary-600));
-  border-radius: var(--radius-lg);
-  font-size: 20px;
-  color: white;
->>>>>>> ae0593a67756b636735aa87496db449960755e2a
   box-shadow: var(--shadow-md);
 }
 
