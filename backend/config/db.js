@@ -5,7 +5,7 @@ const config = {
   password: process.env.DB_PASSWORD || 'Thang@123',
   server: process.env.DB_SERVER || 'DESKTOP-RJSRD5P',
   port: parseInt(process.env.DB_PORT) || 1433,
-  database: process.env.DB_NAME || 'EcommerceDB_V3_1',
+  database: process.env.DB_NAME || 'EcoDB',
   options: {
     encrypt: true,
     trustServerCertificate: true

@@ -1,156 +1,139 @@
+/* TEAM SECTION – TECHSTORE STYLE */
+
 .team {
-    background-image: url("../images/background-all.png");
-    background-size: cover;
-    background-position: center;
-    padding: 60px 0;
-    width: 100%;
-    min-height: auto;
-    display: block;
-    position: relative;
-    z-index: 1;
+  width: 100%;
+  padding: 60px 0 70px;
+  background: radial-gradient(circle at top left, #ffe4e6 0, #f9fafb 40%, #ffffff 100%);
 }
 
-.team::before {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.3);
-    z-index: -1;
+.team-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
-.team .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
+/* HEADER */
+
+.team-header {
+  text-align: center;
+  margin-bottom: 36px;
 }
 
-.team .row {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin: 0;
-    width: 100%;
-    gap: 20px; /* Thêm gap để tạo khoảng cách giữa các item */
+.team-eyebrow {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #ef4444;
+  margin-bottom: 6px;
 }
 
-.team .section-title {
-    text-align: center;
-    margin-bottom: 40px;
-    display: block;
-    opacity: 1;
-    visibility: visible;
+.team-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 8px;
 }
 
-.team .section-title h2 {
-    font-size: 32px;
-    color: #fff;
-    position: relative;
-    display: block;
-    text-transform: uppercase;
+.team-subtitle {
+  font-size: 0.95rem;
+  color: #6b7280;
+  max-width: 680px;
+  margin: 0 auto;
+  line-height: 1.6;
 }
 
-.team .section-title h2::before {
-    content: attr(data-title);
-    position: absolute;
-    top: -20px;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 16px;
-    color: #3498db;
-    font-family: 'Dancing Script', cursive;
-    font-weight: bold;
+/* GRID */
+
+.team-grid {
+  margin-top: 28px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
 }
 
-.team-items {
-    width: calc(33.33% - 50px); /* Đảm bảo 3 item trên 1 hàng */
-    margin: 0 10px 30px;
-    position: relative;
-    text-align: center;
-    transition: all 0.3s ease;
-    box-sizing: border-box;
-    display: block;
-    opacity: 1;
-    visibility: visible;
+/* CARD */
+
+.team-card {
+  background: #ffffff;
+  border-radius: 18px;
+  padding: 22px 18px 20px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(248, 113, 113, 0.18);
+  text-align: center;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.team-items img {
-    width: 100%;
-    max-width: 250px;
-    height: auto;
-    border-radius: 50px;
-    opacity: 0.9;
-    transition: all 0.3s ease;
-    display: block;
+.team-card:hover {
+  transform: translateY(-4px);
+  border-color: #f97373;
+  box-shadow: 0 22px 55px rgba(248, 113, 113, 0.28);
 }
 
-.team-items:hover img {
-    opacity: 1;
-    transform: scale(1.05);
+/* AVATAR */
+
+.team-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 999px;
+  overflow: hidden;
+  border: 3px solid #fecaca;
+  background: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
 }
 
-.team-items-text {
-    position: relative;
-    margin-top: 20px;
-    width: 80%;
-    background-color: #f2e4b7;
-    border-radius: 20px;
-    padding: 15px;
-    transition: all 0.3s ease;
-    display: block;
+.team-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
-.team-items:hover .team-items-text {
-    background-color: #f3e1a8;
-    transform: translateY(-10px);
+/* TEXT */
+
+.team-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 4px;
 }
 
-.team-items-text h2 {
-    margin: 0;
-    font-size: 20px;
-    color: #2c3e50;
-    font-family: 'Dancing Script', cursive;
-    display: block;
+.team-role {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #b91c1c;
+  margin-bottom: 8px;
 }
 
-.team-items-text span {
-    display: block;
-    font-size: 16px;
-    color: #7f8c8d;
-    font-weight: bold;
-    margin-top: 5px;
+.team-bio {
+  font-size: 0.9rem;
+  color: #4b5563;
+  line-height: 1.5;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-    .team {
-        padding: 40px 0;
-    }
+/* RESPONSIVE */
 
-    .team-items {
-        width: calc(33.33% - 20px); /* Giữ 3 item trên 1 hàng */
-        margin: 0 10px 30px;
-    }
-
-    .team-items img {
-        max-width: 200px;
-    }
-
-    .team-items-text {
-        width: 90%;
-        padding: 10px;
-    }
+@media (max-width: 992px) {
+  .team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
-@media (max-width: 600px) {
-    .team-items {
-        width: calc(33.33% - 20px); /* Giữ 3 item trên 1 hàng */
-        margin: 0 10px 30px;
-    }
+@media (max-width: 640px) {
+  .team {
+    padding: 40px 0 50px;
+  }
 
-    .team-items img {
-        max-width: 150px; /* Giảm kích thước ảnh trên mobile */
-    }
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .team-card {
+    padding: 18px 16px;
+  }
 }
