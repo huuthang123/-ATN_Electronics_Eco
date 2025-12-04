@@ -25,12 +25,45 @@ class AuthService {
     if (!user) throw new Error('Email không tồn tại');
 
     const bcrypt = require('bcryptjs');
+<<<<<<< HEAD
+    
+    // Debug: Log để kiểm tra
+    console.log('🔍 Debug login:');
+    console.log('  - Email:', email);
+    console.log('  - Password từ request:', password);
+    console.log('  - Password từ DB (length):', user.password?.length);
+    console.log('  - Password từ DB (is hash?):', user.password?.startsWith('$2'));
+    
+    // Kiểm tra xem password trong DB có phải là hash không
+    const isHashed = user.password && user.password.startsWith('$2');
+    
+    let ok = false;
+    if (isHashed) {
+      // Password đã được hash, dùng bcrypt.compare
+      ok = await bcrypt.compare(password, user.password);
+    } else {
+      // Password chưa được hash (plain text), so sánh trực tiếp
+      console.log('⚠️  WARNING: Password trong DB chưa được hash! So sánh plain text');
+      ok = password === user.password;
+    }
+    
+    if (!ok) {
+      console.log('❌ Password không khớp');
+      throw new Error('Sai mật khẩu');
+    }
+
+    console.log('✅ Password khớp, tạo token...');
+    const accessToken = jwt.sign(
+      { id: user.userId },
+      process.env.JWT_SECRET || 'your-secret-key-change-in-production',
+=======
     const ok = await bcrypt.compare(password, user.password);
     if (!ok) throw new Error('Sai mật khẩu');
 
     const accessToken = jwt.sign(
       { id: user.userId },
       process.env.JWT_SECRET,
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
       { expiresIn: "1h" }
     );
 

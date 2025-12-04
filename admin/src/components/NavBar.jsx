@@ -29,6 +29,8 @@ const NavBar = () => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
+<<<<<<< HEAD
+=======
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: "🏠" },
     { path: "/revenue", label: "Doanh thu", icon: "📊" },
@@ -36,20 +38,30 @@ const NavBar = () => {
     { path: "/orders", label: "Đơn hàng", icon: "🛒" }
   ];
 
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
   return (
     <header className="admin-navbar">
       <div className="admin-navbar-container">
         {/* Logo & Brand */}
         <div className="admin-navbar-brand">
           <div className="admin-logo">
+<<<<<<< HEAD
+            <img src="/logo.png" alt="Techstore" className="admin-logo-icon" />
+            <div className="admin-logo-text">
+              <h1>Admin Panel</h1>
+              <span>Techstore</span>
+=======
             <div className="admin-logo-icon">🏪</div>
             <div className="admin-logo-text">
               <h1>Admin Panel</h1>
               <span>Hương Việt Tinh</span>
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
             </div>
           </div>
         </div>
 
+<<<<<<< HEAD
+=======
         {/* Desktop Navigation */}
         <nav className="admin-navbar-nav">
           {navItems.map((item) => (
@@ -64,6 +76,7 @@ const NavBar = () => {
           ))}
         </nav>
 
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
         {/* User Menu */}
         <div className="admin-navbar-user">
           <div className="admin-user-dropdown">
@@ -138,6 +151,9 @@ const NavBar = () => {
           </div>
         </div>
 
+<<<<<<< HEAD
+      </div>
+=======
         {/* Mobile Menu Button */}
         <button
           className="admin-mobile-menu-button"
@@ -169,6 +185,7 @@ const NavBar = () => {
           </div>
         </div>
       )}
+>>>>>>> ae0593a67756b636735aa87496db449960755e2a
     </header>
   );
 };
