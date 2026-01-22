@@ -1,130 +1,148 @@
-.sign-in {
-    width: 90%;
-    max-width: 600px;
-    padding: 90px 75px;
-    background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
-    border-radius: 20px;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    border: 3px solid var(--primary-red);
-    box-shadow: var(--shadow-lg);
-    position: relative;
-    margin: 0 auto;
+/* ===== AUTH LAYOUT CHUNG ===== */
+
+.auth-wrapper {
+  width: 100%;
+  min-height: calc(100vh - 80px); /* trừ phần header ước lượng */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  background: radial-gradient(circle at top left, #ffe4e6 0, #f9fafb 40%, #ffffff 100%);
 }
 
-.sign-in-heading {
-    font-size: 40px;
-    font-weight: bold;
-    color: var(--primary-red);
-    text-align: center;
-    margin-bottom: 35px;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+.sign-card {
+  width: 100%;
+  max-width: 480px;
+  padding: 28px 26px 30px;
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
+/* ===== HEADING & TEXT ===== */
+
+.sign-heading {
+  font-size: 1.7rem;
+  font-weight: 800;
+  text-align: center;
+  color: #111827;
+  margin-bottom: 6px;
+}
+
+.sign-heading span {
+  color: #ef4444;
+}
+
+.sign-subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  text-align: center;
+  margin-bottom: 18px;
+}
+
+/* ===== FORM ===== */
+
+.sign-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.sign-label {
+  font-size: 0.9rem;
+  color: #374151;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.sign-input {
+  width: 100%;
+  padding: 11px 12px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  margin-bottom: 14px;
+}
+
+.sign-input:focus {
+  border-color: #fb7185;
+  box-shadow: 0 0 0 1px rgba(248, 113, 113, 0.32);
+  transform: translateY(-1px);
+}
+
+/* BUTTON */
+
+.sign-submit {
+  margin-top: 6px;
+  padding: 11px 14px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(to right, #ef4444, #fb7185);
+  color: #ffffff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 12px 30px rgba(248, 113, 113, 0.45);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.sign-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 40px rgba(248, 113, 113, 0.6);
+  opacity: 0.96;
+}
+
+.sign-submit:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* ERROR / MESSAGE */
 
 .error-message {
-    color: var(--primary-red);
-    font-size: 16px;
-    text-align: center;
-    margin-bottom: 20px;
-    background: var(--light-red);
-    padding: 10px 20px;
-    border-radius: 8px;
-    border: 1px solid var(--primary-red);
+  color: #b91c1c;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-bottom: 12px;
+  background: #fee2e2;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
 }
 
-.sign-in-label {
-    font-size: 16px;
-    color: var(--text-primary);
-    margin-bottom: 10px;
-    display: inline-block;
-    cursor: pointer;
-    font-weight: 600;
+/* FOOTER SWITCH */
+
+.sign-switch {
+  margin-top: 16px;
+  font-size: 0.88rem;
+  color: #6b7280;
+  text-align: center;
 }
 
-.sign-in-input {
-    display: block;
-    width: 100%;
-    padding: 20px;
-    border-radius: 12px;
-    background-color: var(--white);
-    outline: none;
-    border: 2px solid var(--border-color);
-    font-family: "Roboto", sans-serif;
-    font-size: 16px;
-    transition: all 0.3s ease;
-    box-shadow: var(--shadow);
-    margin-bottom: 30px;
-    margin-top: 5px;
+.sign-link {
+  color: #ef4444;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 4px;
 }
 
-.sign-in-submit {
-    padding: 20px;
-    color: var(--white);
-    font-size: 18px;
-    text-align: center;
-    display: block;
-    border: 0;
-    outline: none;
-    width: 100%;
-    border-radius: 12px;
-    background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
-    cursor: pointer;
-    font-family: "Roboto", sans-serif;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    margin-bottom: 25px;
-    box-shadow: var(--shadow);
-    border: 2px solid transparent;
+.sign-link:hover {
+  text-decoration: underline;
 }
 
-.sign-in-submit:hover {
-    background: linear-gradient(135deg, var(--dark-red) 0%, var(--primary-red) 100%);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-    border-color: var(--accent-red);
-}
+/* RESPONSIVE */
 
-.sign-in-already {
-    font-size: 15px;
-    font-family: "Poppins", sans-serif;
-    padding-left: 5px;
-    text-align: center;
-    color: #999;
-}
+@media (max-width: 640px) {
+  .sign-card {
+    padding: 22px 18px 24px;
+  }
 
-.sign-in-login {
-    font-size: 15px;
-    font-family: "Poppins", sans-serif;
-    padding-left: 5px;
-    text-align: center;
-    text-decoration: none;
-    color: #82c91e;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .sign-in {
-        padding: 40px 30px;
-        width: 95%;
-        min-height: auto; /* Bỏ min-height trên mobile */
-    }
-
-    .sign-in-heading {
-        font-size: 32px;
-    }
-
-    .sign-in-input,
-    .sign-in-submit {
-        padding: 20px;
-        font-size: 16px;
-    }
-
-    .sign-in-label,
-    .sign-in-already,
-    .sign-in-login {
-        font-size: 14px;
-    }
+  .sign-heading {
+    font-size: 1.45rem;
+  }
 }

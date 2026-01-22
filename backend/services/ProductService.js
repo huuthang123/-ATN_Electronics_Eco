@@ -6,8 +6,7 @@ class ProductService {
   // GET ALL PRODUCTS
   // ---------------------------
   async getAll() {
-    const result = await ProductDAO.getAll();
-    return result.recordset;   // getAll vẫn là recordset
+    return await ProductDAO.getAll();   // ⭐ DAO đã trả recordset (mảng)
   }
 
   // ---------------------------
@@ -16,9 +15,8 @@ class ProductService {
   async getById(id) {
     const product = await ProductDAO.getById(id);
 
-    if (!product) return null; // DAO trả về null nếu không tìm thấy
-
-    return product; // DAO mới trả về object gồm: productPrices + productImages
+    if (!product) return null; 
+    return product;
   }
 
   // ---------------------------
@@ -26,7 +24,7 @@ class ProductService {
   // ---------------------------
   async getByCategory(categoryId) {
     const result = await ProductDAO.getByCategory(categoryId);
-    return result.recordset;
+    return result.recordset; // getByCategory vẫn trả object → OK
   }
 
   // ---------------------------
@@ -52,7 +50,6 @@ class ProductService {
       const result = await ProductDAO.delete(id);
       return result.rowsAffected && result.rowsAffected[0] > 0;
     } catch (err) {
-      // FK constraint
       if (err.number === 547) {
         throw new Error(
           "Không thể xóa sản phẩm vì đang được sử dụng trong giỏ hàng, đơn hàng hoặc dữ liệu liên quan."

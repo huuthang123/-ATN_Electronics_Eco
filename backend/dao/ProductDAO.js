@@ -5,14 +5,20 @@ class ProductDAO {
   // ================================
   // GET ALL PRODUCTS (NO prices/images)
   // ================================
-  async getAll() {
-    return sql.query`
-      SELECT p.*, c.name AS categoryName
-      FROM Product p
-      JOIN Category c ON p.categoryId = c.categoryId
-      ORDER BY p.productId DESC
-    `;
-  }
+ // ================================
+// GET ALL PRODUCTS (TRẢ VỀ ARRAY CHUẨN)
+// ================================
+async getAll() {
+  const result = await sql.query`
+    SELECT p.*, c.name AS categoryName
+    FROM Product p
+    JOIN Category c ON p.categoryId = c.categoryId
+    ORDER BY p.productId DESC
+  `;
+  
+  return result.recordset;   // ⭐ MẢNG DANH SÁCH SẢN PHẨM
+}
+
 
   // ================================
   // GET PRODUCT BY ID (WITH prices + images)

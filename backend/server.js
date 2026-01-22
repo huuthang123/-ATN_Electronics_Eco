@@ -48,6 +48,7 @@ app.use(morgan("dev"));
 app.use(express.json({ limit: "50mb" }));
 
 // Routes
+app.use("/api/recommend", require("./routes/RecommendRoutes"));
 app.use("/api/auth", require("./routes/AuthRoutes"));
 app.use("/api/users", require("./routes/UserRoutes"));
 app.use("/api/reviews", require("./routes/ReviewRoutes"));
@@ -63,6 +64,7 @@ app.use("/api/prices", require("./routes/PriceRoutes"));
 app.use("/api/summary", require("./routes/SummaryRoutes"));
 app.use("/api/related", require("./routes/RelatedRoutes"));
 app.use("/api/search", require("./routes/SearchRoutes"));
+
 
 
 // Endpoint nhận summary từ Python (Socket)

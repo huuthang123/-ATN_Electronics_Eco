@@ -1,9 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Allura&display=swap');
+/* ===== Google Fonts (gộp lại, tránh import trùng) ===== */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Dancing+Script:wght@400..700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Allura&display=swap');
 
-/* CSS tổng thể - Theme bán đồ điện tử */
+/* ===== CSS tổng thể - Theme bán đồ điện tử ===== */
 :root {
     --primary-red: #dc2626;
     --dark-red: #b91c1c;
@@ -18,6 +16,10 @@
     --border-color: #e5e7eb;
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+
+    /* ⭐ Chiều cao header (fixed) – CHỈNH đúng với Header.css */
+    /* Nếu header thấp hơn, có thể để 80px cho đỡ dư khoảng trắng */
+    --header-height: 90px;
 }
 
 html, body {
@@ -29,7 +31,6 @@ html, body {
 }
 
 html {
-    width: 100%;
     max-width: 100%;
 }
 
@@ -47,19 +48,20 @@ body {
     line-height: 1.6;
 }
 
-/* Tổng thể */
+/* Tổng thể App */
 .app-wrapper {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
 }
 
+/* ⭐ ĐẨY TOÀN BỘ NỘI DUNG XUỐNG DƯỚI HEADER FIXED */
 .main-content {
     background: linear-gradient(135deg, var(--white) 0%, var(--light-gray) 100%);
     width: 100%;
-    min-height: auto;
     display: block;
+    /* chừa chỗ cho header + 20px khoảng cách */
+    padding-top: calc(var(--header-height) + 20px);
 }
 
 /* Container và Row */
@@ -67,7 +69,7 @@ body {
     margin: 0 auto;
     max-width: 1200px;
     width: 100%;
-    padding: 0 5px; /* Giảm từ 10px xuống 5px */
+    padding: 0 5px;
 }
 
 .row {
@@ -84,7 +86,7 @@ body {
     background-color: transparent;
 }
 
-/* Thêm style cụ thể để tránh ghi đè */
+/* Team section background */
 .team.section-padding {
     background-image: url("../images/backgroundsaykho.png") !important;
     background-size: cover;
@@ -104,7 +106,6 @@ body {
     transition: all 0.3s ease-in-out;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.5);
     text-align: center;
-    font-family: var(--sub-text);
     text-decoration: none;
     display: inline-block;
 }
@@ -119,7 +120,7 @@ body {
     transform: scale(1);
 }
 
-/* Hộp chat */
+/* Hộp chat (floating) */
 .chat-icon {
     position: fixed;
     bottom: 20px;
@@ -260,7 +261,7 @@ body {
     background-color: #eec984;
 }
 
-/* Responsive */
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
     .section-padding {
         padding: 40px 10px;
